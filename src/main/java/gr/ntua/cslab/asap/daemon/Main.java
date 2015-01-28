@@ -9,8 +9,6 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.xml.bind.ValidationException;
-import javax.xml.ws.WebServiceException;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.eclipse.jetty.server.Connector;
@@ -35,6 +33,7 @@ public class Main {
         }
         ServerStaticComponents.properties = new Properties();
         ServerStaticComponents.properties.load(stream);
+        
     }
 
     private static void configureServer() throws Exception {
@@ -86,7 +85,7 @@ public class Main {
         ServletHolder holder = new ServletHolder(ServletContainer.class);
         holder.setInitParameter("com.sun.jersey.config.property.resourceConfigClass", "com.sun.jersey.api.core.PackagesResourceConfig");
         holder.setInitParameter("com.sun.jersey.config.property.packages",
-                "gr.ntua.cslab.asap.server.daemon.rest;"
+                "gr.ntua.cslab.asap.daemon.rest;"
                 + "org.codehaus.jackson.jaxrs");//Set the package where the services reside
         holder.setInitParameter("com.sun.jersey.api.json.POJOMappingFeature", "true");
         holder.setInitParameter("com.sun.jersey.config.feature.Formatted", "true");
@@ -124,11 +123,22 @@ public class Main {
     }
 
     private static void creatDirs() {
-        File csarDir = new File("/tmp/asap/");
-
-        if (!csarDir.exists()) {
-            csarDir.mkdir();
+    	String folder = ServerStaticComponents.properties.getProperty("asap.dir");
+    	
+        File asapDir = new File(folder);
+        if (!asapDir.exists()) {
+        	asapDir.mkdir();
         }
+        File opDir = new File(folder+"/operators");
+        if (!opDir.exists()) {
+        	opDir.mkdir();
+        }
+        File workflowDir = new File(folder+"/workflows");
+        if (!workflowDir.exists()) {
+        	workflowDir.mkdir();
+        }
+        
+        
     }
 
     public static void main(String[] args) throws Exception {

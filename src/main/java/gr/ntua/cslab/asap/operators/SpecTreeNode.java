@@ -2,6 +2,7 @@ package gr.ntua.cslab.asap.operators;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -161,6 +162,30 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 		}
 	}
 
+	public void writeToPropertiesFile(String curentPath, Properties props) {
+		if(children.size()==0){
+			props.setProperty(curentPath+name, value);
+		}
+		else{
+			curentPath+=name+".";
+			for(SpecTreeNode n : children.values()){
+				n.writeToPropertiesFile(curentPath, props);
+			}
+		}
+	}
+
+	public String toKeyValues(String curentPath, String ret) {
+		if(children.size()==0){
+			ret+= curentPath+name+" = "+value+"\n";
+		}
+		else{
+			curentPath+=name+".";
+			for(SpecTreeNode n : children.values()){
+				ret =n.toKeyValues(curentPath, ret);
+			}
+		}
+		return ret;
+	}
 
 	public boolean checkMatch(SpecTreeNode o1) {
 		//materialized operator o1
@@ -302,5 +327,9 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 			}
 		}
 	}
+
+
+
+
 
 }

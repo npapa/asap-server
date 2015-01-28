@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.*;
@@ -64,6 +65,19 @@ public class SpecTree {
 			i++;
 		}
 		ret+="}";
+		return ret;
+	}
+	
+	public void writeToPropertiesFile(String curentPath, Properties props) {
+		for(SpecTreeNode n : tree.values()){
+			n.writeToPropertiesFile(curentPath, props);
+		}
+	}
+
+	public String toKeyValues(String curentPath, String ret) {
+		for(SpecTreeNode n : tree.values()){
+			ret =n.toKeyValues(curentPath, ret);
+		}
 		return ret;
 	}
 
@@ -155,5 +169,7 @@ public class SpecTree {
 		}
 		return null;
 	}
+
+
 
 }

@@ -1,5 +1,10 @@
 package gr.ntua.cslab.asap.operators;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.Properties;
+
 public class Operator {
 	public SpecTree optree;
 	public String opName;
@@ -18,6 +23,31 @@ public class Operator {
 		String ret = opName+": ";
 		ret+= optree.toString();
 		return ret;
+	}
+	
+	public String toKeyValues() {
+		String ret ="";
+		ret+=optree.toKeyValues("", ret);
+		return ret;
+	}
+	
+	public void writeToPropertiesFile(String filename) {
+		try {
+	        Properties props = new Properties();
+
+			optree.writeToPropertiesFile("", props);
+	        File f = new File(filename);
+	        if (!f.exists()) {
+	        	f.createNewFile();
+	        }
+	        OutputStream out = new FileOutputStream( f );
+	        props.store(out,"");
+	        out.close();
+	    }
+	    catch (Exception e ) {
+	        e.printStackTrace();
+	    }
+		
 	}
 
 	public static void main(String[] args) {
@@ -47,7 +77,8 @@ public class Operator {
 		op.add("Constraints.OpSpecification.Algorithm.Join.type", "HashJoin");
 
 		//op.add("Properties.MaintainTags", ".*");
-		System.out.println(op);
+		
+		System.out.println(op.toKeyValues());
 
 		Operator op1 = new Operator("HBase_HashJoin");
 		op1.add("Constraints.Input1.DataInfo.Attributes.number","1");
@@ -74,8 +105,9 @@ public class Operator {
 		op1.add("Constraints.OpSpecification.Algorithm.Join.JoinCondition","in1.atr1 = in2.atr2");
 		op1.add("Constraints.OpSpecification.Algorithm.Join.type", "MergeJoin");
 		
-		System.out.println(op1);
+		op1.writeToPropertiesFile("/home/nikos/test1");
 
+		System.exit(0);
 		AbstractOperator abstractOp = new AbstractOperator("JoinOp");
 		abstractOp.add("Constraints.Input1.DataInfo.Attributes.number","1");
 		abstractOp.add("Constraints.Input2.DataInfo.Attributes.number","2");

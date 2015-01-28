@@ -276,7 +276,7 @@ public class AbstractWorkflow {
 		//System.out.print(d4.datasetName+"=");
 		Workflow workflow1 = abstractWorkflow.optimizeWorkflow(d4);
 		//System.out.println();
-		//System.out.println(workflow1);
+		System.out.println(workflow1);
 	}
 
 

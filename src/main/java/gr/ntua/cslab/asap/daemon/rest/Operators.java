@@ -1,6 +1,8 @@
 package gr.ntua.cslab.asap.daemon.rest;
 
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -23,8 +25,18 @@ public class Operators {
     
     
     @GET
-    public String getApplications() {
-        return "ok!!";
+    @Produces(MediaType.TEXT_HTML)
+    public String listOperators() {
+    	String ret = "<ul>"
+    			+ "<li><a href=\"#\">Coffee</a></li>"
+    			+ "<li><a href=\"#\">Tea</a></li>"
+    			+ "<li><a href=\"#\">Milk</a></li>"
+    			+ "</ul>";
+        return ret;
     }
+    
+    
+    
+    
     
 }
