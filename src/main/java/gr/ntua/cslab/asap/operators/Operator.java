@@ -1,8 +1,16 @@
 package gr.ntua.cslab.asap.operators;
 
+import gr.ntua.cslab.asap.daemon.Main;
+import gr.ntua.cslab.asap.daemon.ServerStaticComponents;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 public class Operator {
@@ -30,28 +38,37 @@ public class Operator {
 		ret+=optree.toKeyValues("", ret);
 		return ret;
 	}
-	
-	public void writeToPropertiesFile(String filename) {
-		try {
-	        Properties props = new Properties();
-
-			optree.writeToPropertiesFile("", props);
-	        File f = new File(filename);
-	        if (!f.exists()) {
-	        	f.createNewFile();
-	        }
-	        OutputStream out = new FileOutputStream( f );
-	        props.store(out,"");
-	        out.close();
-	    }
-	    catch (Exception e ) {
-	        e.printStackTrace();
-	    }
 		
+	public void readPropertiesFromFile(String filename) throws IOException{
+        File f = new File(filename);
+		InputStream stream = new FileInputStream(f);
+		Properties props = new Properties();
+		props.load(stream);
+		for(Entry<Object, Object> e : props.entrySet()){
+			add((String)e.getKey(), (String)e.getValue());
+		}
+		stream.close();
+	}
+	
+	public void writeToPropertiesFile(String filename) throws IOException {
+        Properties props = new Properties();
+
+		optree.writeToPropertiesFile("", props);
+        File f = new File(filename);
+        if (!f.exists()) {
+        	f.createNewFile();
+        }
+        OutputStream out = new FileOutputStream( f );
+        props.store(out,"");
+        out.close();
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		Operator op = new Operator("HBase_HashJoin");
+		op.readPropertiesFromFile("/home/nikos/test1");
+		System.out.println(op.toKeyValues());
+		System.exit(0);
+		
 		op.add("Constraints.Input1.DataInfo.Attributes.number","2");
 		op.add("Constraints.Input1.DataInfo.Attributes.Atr1.type","ByteWritable");
 		op.add("Constraints.Input1.DataInfo.Attributes.Atr2.type","List<ByteWritable>");
