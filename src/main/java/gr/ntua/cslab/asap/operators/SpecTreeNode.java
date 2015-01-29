@@ -176,7 +176,7 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 
 	public String toKeyValues(String curentPath, String ret) {
 		if(children.size()==0){
-			ret+= curentPath+name+" = "+value+"\n";
+			ret+= curentPath+name+" = "+value+"<br>";
 		}
 		else{
 			curentPath+=name+".";

@@ -49,6 +49,16 @@ public class Operator {
 		}
 		stream.close();
 	}
+
+	public void readPropertiesFromFile(File file) throws IOException{
+		InputStream stream = new FileInputStream(file);
+		Properties props = new Properties();
+		props.load(stream);
+		for(Entry<Object, Object> e : props.entrySet()){
+			add((String)e.getKey(), (String)e.getValue());
+		}
+		stream.close();
+	}
 	
 	public void writeToPropertiesFile(String filename) throws IOException {
         Properties props = new Properties();
@@ -152,5 +162,6 @@ public class Operator {
 	public String getParameter(String key) {
 		return optree.getParameter(key);
 	}
+
 
 }

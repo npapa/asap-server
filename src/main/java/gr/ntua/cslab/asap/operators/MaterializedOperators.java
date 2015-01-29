@@ -1,5 +1,6 @@
 package gr.ntua.cslab.asap.operators;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -142,9 +143,13 @@ public class MaterializedOperators {
 		operators.add(sort);
 		operators.add(sort2);
 		operators.add(move);
+		
+		
 	}
 
-
+	public static void main(String[] args) {
+		new MaterializedOperators();
+	}
 
 	public List<Operator> getMatches(AbstractOperator abstractOperator){
 		List<Operator> ret = new ArrayList<Operator>();

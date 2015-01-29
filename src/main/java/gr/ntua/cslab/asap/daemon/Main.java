@@ -1,6 +1,9 @@
 package gr.ntua.cslab.asap.daemon;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
+import com.sun.xml.internal.bind.CycleRecoverable.Context;
+
+import gr.ntua.cslab.asap.operators.OperatorLibrary;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,13 +12,16 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.DefaultHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.apache.log4j.PropertyConfigurator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
-import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -82,6 +88,8 @@ public class Main {
             System.exit(1);
         }
 
+      
+        
         ServletHolder holder = new ServletHolder(ServletContainer.class);
         holder.setInitParameter("com.sun.jersey.config.property.resourceConfigClass", "com.sun.jersey.api.core.PackagesResourceConfig");
         holder.setInitParameter("com.sun.jersey.config.property.packages",
@@ -95,6 +103,16 @@ public class Main {
 //        ServerStaticComponents.server = new Server();
         ServletContextHandler context = new ServletContextHandler(ServerStaticComponents.server, "/", ServletContextHandler.SESSIONS);
         context.addServlet(holder, "/*");
+        
+
+        ResourceHandler resource_handler = new ResourceHandler();
+        resource_handler.setDirectoriesListed(true);
+        resource_handler.setWelcomeFiles(new String[] { "index.html" });
+        resource_handler.setResourceBase(".");
+        HandlerList handlers = new HandlerList();
+        handlers.setHandlers(new Handler[] { resource_handler, context });
+        ServerStaticComponents.server.setHandler(handlers);
+        
         Logger.getLogger(Main.class.getName()).info("Server configured");
 
     }
@@ -141,15 +159,22 @@ public class Main {
         
     }
 
+	private static void loadOperators() throws IOException {
+		OperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/operators");
+	}
+	
+	
     public static void main(String[] args) throws Exception {
         configureLogger();
         loadProperties();
         creatDirs();
         addShutdownHook();
         configureServer();
+        loadOperators();
 
         ServerStaticComponents.server.start();
         Logger.getLogger(Main.class.getName()).info("Server is started");
 
     }
+
 }

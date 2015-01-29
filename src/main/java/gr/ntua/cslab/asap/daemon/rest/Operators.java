@@ -1,6 +1,8 @@
 package gr.ntua.cslab.asap.daemon.rest;
 
 
+import gr.ntua.cslab.asap.operators.OperatorLibrary;
+
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,15 +29,22 @@ public class Operators {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public String listOperators() {
-    	String ret = "<ul>"
-    			+ "<li><a href=\"#\">Coffee</a></li>"
-    			+ "<li><a href=\"#\">Tea</a></li>"
-    			+ "<li><a href=\"#\">Milk</a></li>"
-    			+ "</ul>";
+    	List<String> l = OperatorLibrary.getOperators();
+    	String ret = "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"operators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
         return ret;
     }
-    
-    
+
+    @GET
+    @Path("{id}/")
+    @Produces(MediaType.TEXT_HTML)
+    public String getApplicationInfo(@PathParam("id") String id) {
+    	return OperatorLibrary.getOperatorDescription(id);
+    }
     
     
     
