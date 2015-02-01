@@ -1,7 +1,7 @@
 <!doctype html>
 
 <meta charset="utf-8">
-<title>Dagre D3 Renderer Demo</title>
+<title>ASAP</title>
 
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="dagre-d3.js"></script>
@@ -149,7 +149,7 @@
 </style>
 
 <body>
-<div class="live map">
+<div id="demo" class="live map">
   <svg><g/></svg>
 </div>
 
@@ -211,40 +211,45 @@
     marginx: 20,
     marginy: 20
   });
-
+  
+  var data;
+  function draw1(isUpdate) {
+  	 var st = "er ";
+ 	 for (var i = 0; i < data.operators.length; i++) {
+      	var operator = data.operators[i];
+      	st += operator.name;
+     }
+  
+    document.getElementById("demo").innerHTML=st;
+  }
+  
   function draw(isUpdate) {
-    for (var id in workers) {
-      var worker = workers[id];
-      var className = worker.status 
-      var html = "<div>";
-      html += "<span class=status></span>";
-      html += "<span class=name>"+id+"</span>";
-      html += "<span class=queue><span class=counter>cost:"+worker.cost+"</span></span>";
-      html += "</div>";
-      g.setNode(id, {
-        labelType: "html",
-        label: html,
-        rx: 5,
-        ry: 5,
-        padding: 0,
-        class: className
-      });
-
-      if (worker.inputQueue) {
-        g.setEdge(worker.inputQueue, id, {
-          label: worker.inputThroughput,
-          width: 40
-        });
-      }
-      if (worker.inputQueue2) {
-        g.setEdge(worker.inputQueue2, id, {
-	  style: "stroke: #f66; stroke-width: 2px; fill: #fff;",
-          label: worker.inputThroughput,
-          width: 40
-        });
-      }
-    }
-
+  	 var st = "er ";
+ 	 for (var i = 0; i < data.operators.length; i++) {
+      	var operator = data.operators[i];
+      	var className = operator.status;
+      	var html = "<div>";
+      	var id = operator.name;
+      	html += "<span class=status></span>";
+      	html += "<span class=name>"+id+"</span>";
+      	html += "<span class=queue><span class=counter>cost:"+operator.cost+"</span></span>";
+      	html += "</div>";
+      	g.setNode(id, {
+	        labelType: "html",
+	        label: html,
+	        rx: 5,
+	        ry: 5,
+	        padding: 0,
+	        class: className
+	    });
+ 	 	for (var j = 0; j < operator.input.length; j++) {
+	        g.setEdge(operator.input[j], id, {
+	          label: "",
+	          width: 40
+	        });
+        }
+	}
+	    
     inner.call(render, g);
 
     // Zoom and scale to fit
@@ -262,26 +267,25 @@
 
   // Do some mock queue status updates
   setInterval(function() {
-    var stoppedWorker1Count = workers["elasticsearch-writer"].cost;
-    var stoppedWorker2Count = workers["meta-enricher"].cost;
-    for (var id in workers) {
-      workers[id].cost = Math.ceil(Math.random() * 3);
-      if (workers[id].inputThroughput) workers[id].inputThroughput = Math.ceil(Math.random() * 250);
-    }
-    workers["elasticsearch-writer"].cost = stoppedWorker1Count + Math.ceil(Math.random() * 100);
-    workers["meta-enricher"].cost = stoppedWorker2Count + Math.ceil(Math.random() * 100);
-    draw(true);
-  }, 1000);
-
-  // Do a mock change of worker configuration
-  setInterval(function() {
-    workers["elasticsearch-monitor"] = {
-      "consumers": 0,
-      "cost": 0,
-      "inputQueue": "elasticsearch-writer",
-      "inputThroughput": 50
-    }
-  }, 5000);
+  		var xmlhttp;
+		if (window.XMLHttpRequest)
+  		{// code for IE7+, Firefox, Chrome, Opera, Safari
+  			xmlhttp=new XMLHttpRequest();
+  		}
+		else
+  		{// code for IE6, IE5
+  			xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+  		}
+		xmlhttp.onreadystatechange=function()
+  		{
+  //  		document.getElementById("demo").innerHTML=xmlhttp.responseText;
+  			data = JSON.parse(xmlhttp.responseText);
+    	    draw(true);
+  		}
+		xmlhttp.open("GET","workflows",true);
+		xmlhttp.send();
+  	}, 1000);
 
   draw();
 </script>
+

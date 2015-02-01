@@ -1,6 +1,7 @@
 package gr.ntua.cslab.asap.daemon.rest;
 
 
+import gr.ntua.cslab.asap.daemon.ServerStaticComponents;
 import gr.ntua.cslab.asap.operators.OperatorLibrary;
 
 import java.util.List;
