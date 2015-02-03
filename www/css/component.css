@@ -1,3 +1,15 @@
+.mainpage{
+	width: 100%;
+	max-width: 70em;
+	margin: 0 auto;
+	padding: 2em 0em;
+}
+
+.mainpage a{
+	color: #191007;
+}
+
+
 .cbp-hrmenu {
 	width: 100%;
 	margin-top: 2em;
@@ -17,7 +29,7 @@
 	width: 90%;
 	max-width: 70em;
 	margin: 0 auto;
-	padding: 0 1.875em;
+	padding: 0;
 }
 
 .cbp-hrmenu > ul > li {
@@ -41,47 +53,6 @@
 	background: #47a3da;
 }
 
-/* sub-menu */
-.cbp-hrmenu .cbp-hrsub {
-	display: none;
-	position: absolute;
-	background: #47a3da;
-	width: 100%;
-	left: 0;
-}
-
-.cbp-hropen .cbp-hrsub {
-	display: block;
-	padding-bottom: 3em;
-}
-
-.cbp-hrmenu .cbp-hrsub-inner > div {
-	width: 33%;
-	float: left;
-	padding: 0 2em 0;
-}
-
-.cbp-hrmenu .cbp-hrsub-inner:before,
-.cbp-hrmenu .cbp-hrsub-inner:after {
-	content: " ";
-	display: table;
-}
-
-.cbp-hrmenu .cbp-hrsub-inner:after {
-	clear: both;
-}
-
-.cbp-hrmenu .cbp-hrsub-inner > div a {
-	line-height: 2em;
-}
-
-.cbp-hrsub h4 {
-	color: #afdefa;
-	padding: 2em 0 0.6em;
-	margin: 0;
-	font-size: 160%;
-	font-weight: 300;
-}
 
 /* Examples for media queries */
 
