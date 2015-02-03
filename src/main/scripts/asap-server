@@ -15,7 +15,8 @@ PIDFILE=/tmp/asap-server.pid
 
 start() {
     [ -f $PIDFILE ] && echo "ASAP Server already running ($(cat $PIDFILE))" && exit 0
-    java -Dname=asap-server -cp $CLASSPATH  gr.ntua.cslab.asap.daemon.Main &
+    cd $ASAP_SERVER_HOME
+    java -Duser.dir=$ASAP_SERVER_HOME -Dname=asap-server -cp $CLASSPATH  gr.ntua.cslab.asap.daemon.Main &
     echo $! > $PIDFILE;
 }
 
