@@ -2,6 +2,7 @@ package gr.ntua.cslab.asap.workflow;
 
 import gr.ntua.cslab.asap.operators.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -219,7 +220,7 @@ public class AbstractWorkflow {
 		return null;
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		MaterializedOperators library =  new MaterializedOperators();
 		AbstractWorkflow abstractWorkflow = new AbstractWorkflow(library);
 		Dataset d1 = new Dataset("hbaseDataset");
@@ -232,6 +233,8 @@ public class AbstractWorkflow {
 		d1.add("Optimization.size","1TB");
 		d1.add("Optimization.uniqueKeys","1.3 billion");
 
+		d1.writeToPropertiesFile(d1.datasetName);
+		
 		Dataset d2 = new Dataset("mySQLDataset");
 		d2.add("Constraints.DataInfo.Attributes.number","2");
 		d2.add("Constraints.DataInfo.Attributes.Atr1.type","Varchar");
@@ -240,6 +243,8 @@ public class AbstractWorkflow {
 		d2.add("Constraints.Engine.DB.Relational.MySQL.location","127.0.0.1");
 		d2.add("Optimization.size","1GB");
 		d2.add("Optimization.uniqueKeys","1 million");
+		
+		d2.writeToPropertiesFile(d2.datasetName);
 
 		AbstractOperator abstractOp = new AbstractOperator("JoinOp");
 		abstractOp.add("Constraints.Input.number","2");
@@ -248,13 +253,17 @@ public class AbstractWorkflow {
 		abstractOp.add("Constraints.Input1.DataInfo.Attributes.number","2");
 		abstractOp.add("Constraints.Output0.DataInfo.Attributes.number","2");
 		abstractOp.addRegex(new NodeName("Constraints.OpSpecification.Algorithm.Join", new NodeName(".*", null, true), false), ".*");
-		
+
+		abstractOp.writeToPropertiesFile(abstractOp.opName);
+
 		AbstractOperator abstractOp1 = new AbstractOperator("SortOp");
 		abstractOp1.add("Constraints.Input.number","1");
 		abstractOp1.add("Constraints.Output.number","1");
 		abstractOp1.add("Constraints.Input0.DataInfo.Attributes.number","2");
 		abstractOp1.add("Constraints.Output0.DataInfo.Attributes.number","2");
 		abstractOp1.addRegex(new NodeName("Constraints.OpSpecification.Algorithm.Sort", new NodeName(".*", null, true), false), ".*");
+
+		abstractOp1.writeToPropertiesFile(abstractOp1.opName);
 		
 		Dataset d3 = new Dataset("d3");
 		Dataset d4 = new Dataset("d4");

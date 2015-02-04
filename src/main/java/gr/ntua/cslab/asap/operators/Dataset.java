@@ -1,5 +1,11 @@
 package gr.ntua.cslab.asap.operators;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Properties;
+
 public class Dataset implements Comparable<Dataset> {
 
 	public SpecTree datasetTree;
@@ -40,5 +46,18 @@ public class Dataset implements Comparable<Dataset> {
 		datasetTree = op.optree.copySubTree("Constraints.Output"+position);
 		if(datasetTree == null)
 			datasetTree = new SpecTree();
+	}
+
+	public void writeToPropertiesFile(String filename) throws IOException {
+        Properties props = new Properties();
+
+        datasetTree.writeToPropertiesFile("", props);
+        File f = new File(filename);
+        if (!f.exists()) {
+        	f.createNewFile();
+        }
+        OutputStream out = new FileOutputStream( f );
+        props.store(out,"");
+        out.close();
 	}
 }

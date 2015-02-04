@@ -27,7 +27,6 @@ public class WebUI {
     public Logger logger = Logger.getLogger(WebUI.class);
     private static String header=readFile("header.html");
     private static String footer=readFile("footer.html");
-    private static String header2=readFile("header2.html");
     private static String workflow=readFile("workflow.html");
     
     @GET
@@ -62,7 +61,7 @@ public class WebUI {
     @Produces(MediaType.TEXT_HTML)
     @Path("/operators/{id}/")
     public String operatorDescription(@PathParam("id") String id) throws IOException {
-    	String ret = header2;
+    	String ret = header;
     	ret += "<p>"+OperatorLibrary.getOperatorDescription(id)+"</p>";
     	ret += footer;
         return ret;
@@ -89,7 +88,7 @@ public class WebUI {
     @Produces(MediaType.TEXT_HTML)
     @Path("/workflows/{id}/")
     public String workflowDescription(@PathParam("id") String id) throws IOException {
-    	String ret = header2+workflow;
+    	String ret = header+workflow;
     	
     	
     	ret += footer;
