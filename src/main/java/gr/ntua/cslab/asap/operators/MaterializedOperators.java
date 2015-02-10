@@ -159,4 +159,10 @@ public class MaterializedOperators {
 		}
 		return ret;
 	}
+
+	public List<Operator> checkMove(Dataset from, Dataset to) {
+		AbstractOperator abstractMove = new AbstractOperator("move");
+		abstractMove.moveOperator(from,to);
+		return getMatches(abstractMove);
+	}
 }

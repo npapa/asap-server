@@ -19,6 +19,28 @@ public class AbstractOperator implements Comparable<AbstractOperator> {
 		optree.add(key,value);
 	}
 	
+
+
+	public void moveOperator(Dataset from, Dataset to) {
+		optree.addAll(from.datasetTree.copyInputToOpSubTree("Constraints","Input0"));
+		optree.addAll(to.datasetTree.copyInputToOpSubTree("Constraints","Output0"));
+	}
+	
+
+	public void setOutput(SpecTree t, int i) {
+	}
+
+	public void setInput(SpecTree t, int i) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String toKeyValues() {
+		String ret ="";
+		ret+=optree.toKeyValues("", ret);
+		return ret;
+	}
+	
 	@Override
 	public String toString() {
 		String ret = opName+": ";

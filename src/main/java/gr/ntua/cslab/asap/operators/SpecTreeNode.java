@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -246,7 +247,8 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 	}
 
 
-	public SpecTreeNode copySubTree(String prefix) {
+	
+	public SpecTreeNode copyInputToOpSubTree(String prefix, String inout) {
 		SpecTreeNode ret = new SpecTreeNode(this.name);
 		if(prefix==null){//copy all
 			if(children.size()==0){
@@ -256,7 +258,7 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 			}
 			else{
 				for(SpecTreeNode n : children.values()){
-					SpecTreeNode temp = n.copySubTree(null);
+					SpecTreeNode temp = n.copyInputToOpSubTree(null, inout);
 					ret.children.put(temp.getName(), temp);
 				}
 			}
@@ -270,7 +272,70 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 				if(s!=null){
 					//System.out.println("Found!!");
 					String nextKey = prefix.substring(prefix.indexOf(".")+1);
-					SpecTreeNode temp = s.copySubTree(nextKey);
+					SpecTreeNode temp = s.copyInputToOpSubTree(nextKey, inout);
+					if(temp==null){
+						//not found
+						return null;
+					}
+					ret.children.put(temp.getName(), temp);
+				}
+				else{
+					//not found
+					return null;
+				}
+			}
+			else{//leaf
+				//add Input{i} node
+				SpecTreeNode s = children.get(prefix);
+				if(s!=null){
+
+					SpecTreeNode temp = s.copyInputToOpSubTree(null,inout);
+					
+					SpecTreeNode ret1 = new SpecTreeNode(inout);
+					for(SpecTreeNode n : temp.children.values()){
+						ret1.children.put(n.getName(), n);
+					}
+					temp.children = new TreeMap<String, SpecTreeNode>();
+					temp.children.put(ret1.getName(), ret1);
+					
+					ret.children.put(temp.getName(), temp);
+					
+				}
+				else{
+					//not found
+					return null;
+				}
+			}
+		}
+		return ret;
+	}
+	
+	
+	public SpecTreeNode copyInputSubTree(String prefix) {
+		SpecTreeNode ret = new SpecTreeNode(this.name);
+		if(prefix==null){//copy all
+			if(children.size()==0){
+				//leaf
+				ret.name = new String(this.name);
+				ret.value = new String(this.value);
+			}
+			else{
+				for(SpecTreeNode n : children.values()){
+					SpecTreeNode temp = n.copyInputSubTree(null);
+					ret.children.put(temp.getName(), temp);
+				}
+			}
+		}
+		else{
+			if (prefix.contains(".")){
+				String curname = prefix.substring(0, prefix.indexOf("."));
+				//System.out.println("Checking name: "+curname);
+				SpecTreeNode s = children.get(curname);
+				
+				if(s!=null){
+					//System.out.println("Found!!");
+					String nextKey = prefix.substring(prefix.indexOf(".")+1);
+					SpecTreeNode temp = s.copyInputSubTree(nextKey);
 					if(temp==null){
 						//not found
 						return null;
@@ -286,7 +351,8 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 				//remove Input{i} node
 				SpecTreeNode s = children.get(prefix);
 				if(s!=null){
-					SpecTreeNode temp = s.copySubTree(null);
+					//SpecTreeNode temp = s.copySubTree(null);
+					//ret.children.put(temp.getName(), temp);
 					for(SpecTreeNode tn : s.children.values()){
 						ret.children.put(tn.getName(), tn);
 					}
@@ -329,7 +395,18 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 	}
 
 
+	public void addAll(SpecTreeNode f) {
 
+		for(Entry<String, SpecTreeNode> k : f.children.entrySet()){
+			SpecTreeNode v = this.children.get(k.getKey());
+			if(v!=null){
+				v.addAll(k.getValue());
+			}
+			else{
+				this.children.put(k.getKey(), k.getValue());
+			}
+		}
+	}
 
 
 }

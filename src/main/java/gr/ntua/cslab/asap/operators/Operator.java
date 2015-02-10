@@ -72,6 +72,8 @@ public class Operator {
         props.store(out,"");
         out.close();
 	}
+	
+	
 
 	public static void main(String[] args) throws IOException {
 		Operator op = new Operator("HBase_HashJoin");

@@ -33,7 +33,7 @@ public class Dataset implements Comparable<Dataset> {
 	}
 
 	public void inputFor(Operator op, int position) {
-		datasetTree = op.optree.copySubTree("Constraints.Input"+position);
+		datasetTree = op.optree.copyInputSubTree("Constraints.Input"+position);
 		if(datasetTree == null)
 			datasetTree = new SpecTree();
 	}
@@ -43,7 +43,8 @@ public class Dataset implements Comparable<Dataset> {
 	}
 
 	public void outputFor(Operator op, int position) {
-		datasetTree = op.optree.copySubTree("Constraints.Output"+position);
+		//System.out.println("Generating output for pos: "+ position);
+		datasetTree = op.optree.copyInputSubTree("Constraints.Output"+position);
 		if(datasetTree == null)
 			datasetTree = new SpecTree();
 	}

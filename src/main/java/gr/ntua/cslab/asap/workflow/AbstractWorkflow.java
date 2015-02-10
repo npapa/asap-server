@@ -2,7 +2,11 @@ package gr.ntua.cslab.asap.workflow;
 
 import gr.ntua.cslab.asap.operators.*;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -92,15 +96,25 @@ public class AbstractWorkflow {
 					System.out.println(op.opName);
 					Dataset tempInput = new Dataset("t"+count);
 					tempInput.inputFor(op,i);
+
+					/*if(tempInput.checkMatch(e.getKey())){
+						System.out.println("true");
+						found=true;
+						if(e.getValue()<min){
+							min=e.getValue();
+						}
+					}*/
+					
+					
 					System.out.println("Temp Input "+tempInput);
-					ret.addInputEdge(d, tempInput, op);
+					ret.addInputEdgeOld(d, tempInput, op);
 					count++;
 				}
 				i++;
 			}
 			for(Dataset d : operatorDag.get(a)){
 				for(Operator op : operators){
-					ret.addOutputEdge(op, new Dataset("t"+count), d);
+					ret.addOutputEdgeOld(op, new Dataset("t"+count), d);
 					count++;
 				}
 				
@@ -110,12 +124,13 @@ public class AbstractWorkflow {
 		return ret;
 	}
 	
+	
 	public void optimize(Dataset target, WorkflowDPTable dpTable) {
 		if(dpTable.getCost(target)!=null){
 			return;
 		}
 		if(materializedDatasets.contains(target)){
-			dpTable.addRecord(target, target, new Double(0));
+			dpTable.addRecord(target, target, new Workflow());
 			return;
 			//ret.put(target, new Double(0));
 		}
@@ -128,6 +143,7 @@ public class AbstractWorkflow {
 				List<Operator> operators = library.getMatches(a);
 				int jj =0;
 				for(Operator op : operators){
+					Workflow tempWorkflow = new Workflow();
 					System.out.println("Operator: "+op.opName);
 					Double maxCost = 0.0;
 					int j = 0;
@@ -135,25 +151,46 @@ public class AbstractWorkflow {
 					for(Dataset d : reverseOperatorDag.get(a)){
 						optimize(d,dpTable);
 						Double min = Double.MAX_VALUE;
+						Dataset minDataset=null;
+						Workflow minWorkflow=new Workflow();
+						
 						Dataset tempInput = new Dataset("t"+count);
 						count++;
 						tempInput.inputFor(op,j);
-						j++;
 						//System.out.println("Dataset: "+d.datasetName);
 						boolean found=false;
-						for(Entry<Dataset, Double> e : dpTable.getCost(d).entrySet()){
+						for(Entry<Dataset, Workflow> e : dpTable.getCost(d).entrySet()){
 							System.out.println("Checking: \n"+tempInput);
 							System.out.println(e.getKey());
+							minWorkflow.addEquivalence(e.getKey(), tempInput);
+							minWorkflow.addAll(e.getValue());
 							if(tempInput.checkMatch(e.getKey())){
 								System.out.println("true");
 								found=true;
-								if(e.getValue()<min){
-									min=e.getValue();
+								if(e.getValue().optimalCost<min){
+									min=e.getValue().optimalCost;
+									minDataset=e.getKey();
+									//minWorkflow=e.getValue();
 								}
+							}
+							else{
+								//check move
+								found=true;
+								min=e.getValue().optimalCost;
+
+								//if(e.getValue().optimalCost<min){
+								
+									minDataset=tempInput;
+									minWorkflow=new Workflow();
+									Operator m = new Operator("move");
+									minWorkflow.addInputEdge(e.getKey(), m, 0);
+									minWorkflow.addOutputEdge(m, tempInput, 0);
+								//}
+								
 							}
 						}
 						if(!found){
-							//no much for this input
+							//no much for this input 
 							found0=true;
 							maxCost=Double.MAX_VALUE;
 							break;
@@ -161,6 +198,9 @@ public class AbstractWorkflow {
 						if(min>maxCost){
 							maxCost=min;
 						}
+						tempWorkflow.addInputEdge(minDataset, op, j);
+						tempWorkflow.addAll(minWorkflow);
+						j++;
 							
 					}
 					if(found0){
@@ -171,9 +211,11 @@ public class AbstractWorkflow {
 						maxCost+=op.getCost();
 						Dataset tempOutput = new Dataset("t"+count);
 						count++;
-						tempOutput.outputFor(op,jj);
+						tempOutput.outputFor(op,0);
+						tempWorkflow.addOutputEdge(op,tempOutput, 0);
+						tempWorkflow.optimalCost=maxCost;
 						jj++;
-						dpTable.addRecord(target, tempOutput, maxCost);
+						dpTable.addRecord(target, tempOutput, tempWorkflow);
 						//System.out.println(maxCost);
 					}
 				}
@@ -196,14 +238,16 @@ public class AbstractWorkflow {
 	}
 	
 	public Workflow optimizeWorkflow(Dataset target) {
+		Workflow ret = new Workflow();
 		count =0;
 		WorkflowDPTable dpTable = new WorkflowDPTable();
 		optimize(target,dpTable);
 		Double minCost= Double.MAX_VALUE;
-		for( Entry<Dataset, Double> e : dpTable.getCost(target).entrySet() ){
-			if(e.getValue()<minCost){
-				minCost = e.getValue();
+		for( Entry<Dataset, Workflow> e : dpTable.getCost(target).entrySet() ){
+			if(e.getValue().optimalCost<minCost){
+				minCost = e.getValue().optimalCost;
 			}
+			ret.addAll(e.getValue());
 		}
 		System.out.println("minCost: "+minCost);
 		/*Workflow ret = new Workflow();
@@ -217,7 +261,54 @@ public class AbstractWorkflow {
 		}
 		ret.optimalCost=optCost;
 		System.out.println(optDataset.datasetName+" cost: "+optCost);*/
-		return null;
+		return ret;
+	}
+	
+
+
+	public void writeToDir(String directory) throws IOException {
+        File workflowDir = new File(directory);
+        if (!workflowDir.exists()) {
+        	workflowDir.mkdirs();
+        }
+        File opDir = new File(directory+"/operators");
+        if (!opDir.exists()) {
+        	opDir.mkdirs();
+        }
+        for(AbstractOperator op : operatorDag.keySet()){
+        	op.writeToPropertiesFile(directory+"/operators/"+op.opName);
+        }
+        
+        File datasetDir = new File(directory+"/datasets");
+        if (!datasetDir.exists()) {
+        	datasetDir.mkdirs();
+        }
+        for(Dataset d : datasetDag.keySet()){
+        	d.writeToPropertiesFile(directory+"/datasets/"+d.datasetName);
+        }
+        
+        File edgeGraph = new File(directory+"/graph");
+    	FileOutputStream fos = new FileOutputStream(edgeGraph);
+    	 
+    	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+
+		for(Entry<AbstractOperator, List<Dataset>> e : operatorDag.entrySet()){
+			int i=0;
+			for(Dataset d : reverseOperatorDag.get(e.getKey())){
+				bw.write("0,"+d.datasetName+","+e.getKey().opName+","+i);
+	    		bw.newLine();
+				i++;
+			}
+			i=0;
+			for(Dataset edge : e.getValue()){
+				bw.write("1,"+e.getKey().opName+","+edge.datasetName+","+i);
+	    		bw.newLine();
+				i++;
+			}
+		}
+    	bw.close();
+        
+        
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -233,7 +324,7 @@ public class AbstractWorkflow {
 		d1.add("Optimization.size","1TB");
 		d1.add("Optimization.uniqueKeys","1.3 billion");
 
-		d1.writeToPropertiesFile(d1.datasetName);
+		//d1.writeToPropertiesFile(d1.datasetName);
 		
 		Dataset d2 = new Dataset("mySQLDataset");
 		d2.add("Constraints.DataInfo.Attributes.number","2");
@@ -244,7 +335,7 @@ public class AbstractWorkflow {
 		d2.add("Optimization.size","1GB");
 		d2.add("Optimization.uniqueKeys","1 million");
 		
-		d2.writeToPropertiesFile(d2.datasetName);
+		//d2.writeToPropertiesFile(d2.datasetName);
 
 		AbstractOperator abstractOp = new AbstractOperator("JoinOp");
 		abstractOp.add("Constraints.Input.number","2");
@@ -254,7 +345,7 @@ public class AbstractWorkflow {
 		abstractOp.add("Constraints.Output0.DataInfo.Attributes.number","2");
 		abstractOp.addRegex(new NodeName("Constraints.OpSpecification.Algorithm.Join", new NodeName(".*", null, true), false), ".*");
 
-		abstractOp.writeToPropertiesFile(abstractOp.opName);
+		//abstractOp.writeToPropertiesFile(abstractOp.opName);
 
 		AbstractOperator abstractOp1 = new AbstractOperator("SortOp");
 		abstractOp1.add("Constraints.Input.number","1");
@@ -263,7 +354,7 @@ public class AbstractWorkflow {
 		abstractOp1.add("Constraints.Output0.DataInfo.Attributes.number","2");
 		abstractOp1.addRegex(new NodeName("Constraints.OpSpecification.Algorithm.Sort", new NodeName(".*", null, true), false), ".*");
 
-		abstractOp1.writeToPropertiesFile(abstractOp1.opName);
+		//abstractOp1.writeToPropertiesFile(abstractOp1.opName);
 		
 		Dataset d3 = new Dataset("d3");
 		Dataset d4 = new Dataset("d4");
@@ -279,14 +370,21 @@ public class AbstractWorkflow {
 		System.out.println(abstractWorkflow);
 		
 		
+		abstractWorkflow.writeToDir("asapLibrary/workflows/workflow1");
 		
-		//Workflow workflow = abstractWorkflow.getWorkflow(library, d4);
+		
+		
+		//Workflow workflow = abstractWorkflow.getWorkflow(d4);
+		//workflow.writeToDir("asapLibrary/workflows/matwork");
 		
 		//System.out.print(d4.datasetName+"=");
 		Workflow workflow1 = abstractWorkflow.optimizeWorkflow(d4);
-		//System.out.println();
 		System.out.println(workflow1);
+		workflow1.writeToDir("asapLibrary/workflows/matwork");
+		//System.out.println();
+		//System.out.println(workflow1);
 	}
+
 
 
 

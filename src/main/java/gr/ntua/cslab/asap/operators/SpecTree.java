@@ -118,7 +118,7 @@ public class SpecTree {
 		return true;
 	}
 
-	public SpecTree copySubTree(String prefix) {
+	public SpecTree copyInputToOpSubTree(String prefix, String inout) {
 		SpecTree ret =  new SpecTree();
 
 		//System.out.println("adding key: "+prefix);
@@ -130,7 +130,55 @@ public class SpecTree {
 			if(s!=null){
 				//System.out.println("Found!!");
 				String nextKey = prefix.substring(prefix.indexOf(".")+1);
-				SpecTreeNode temp = s.copySubTree(nextKey);
+				SpecTreeNode temp = s.copyInputToOpSubTree(nextKey,inout);
+				if(temp==null)
+					return null;
+				ret.tree.put(temp.getName(), temp);
+			}
+			else{
+				return null;
+			}
+		}
+		else{//leaf
+
+			//add Input{i} node
+			SpecTreeNode s = tree.get(prefix);
+			if(s!=null){
+				SpecTreeNode temp = s.copyInputToOpSubTree(null,inout);
+				
+				SpecTreeNode ret1 = new SpecTreeNode(inout);
+				for(SpecTreeNode n : temp.children.values()){
+					ret1.children.put(n.getName(), n);
+				}
+				temp.children = new TreeMap<String, SpecTreeNode>();
+				temp.children.put(ret1.getName(), ret1);
+				
+				ret.tree.put(temp.getName(), temp);
+				
+			}
+			else{
+				//not found
+				return null;
+			}
+		}
+		return ret;
+		
+		
+	}
+	
+	public SpecTree copyInputSubTree(String prefix) {
+		SpecTree ret =  new SpecTree();
+
+		//System.out.println("adding key: "+prefix);
+		if (prefix.contains(".")){
+			String curname = prefix.substring(0, prefix.indexOf("."));
+			//System.out.println("Checking name: "+curname);
+			SpecTreeNode s = tree.get(curname);
+			
+			if(s!=null){
+				//System.out.println("Found!!");
+				String nextKey = prefix.substring(prefix.indexOf(".")+1);
+				SpecTreeNode temp = s.copyInputSubTree(nextKey);
 				if(temp==null)
 					return null;
 				ret.tree.put(temp.getName(), temp);
@@ -142,7 +190,7 @@ public class SpecTree {
 		else{//leaf
 			SpecTreeNode s = tree.get(prefix);
 			if(s!=null){
-				SpecTreeNode temp = s.copySubTree(null);
+				SpecTreeNode temp = s.copyInputSubTree(null);
 				ret.tree.put(temp.getName(), temp);
 			}
 			else{
@@ -168,6 +216,18 @@ public class SpecTree {
 			}
 		}
 		return null;
+	}
+
+	public void addAll(SpecTree f) {
+		for(Entry<String, SpecTreeNode> k : f.tree.entrySet()){
+			SpecTreeNode v = this.tree.get(k.getKey());
+			if(v!=null){
+				v.addAll(k.getValue());
+			}
+			else{
+				this.tree.put(k.getKey(), k.getValue());
+			}
+		}
 	}
 
 
