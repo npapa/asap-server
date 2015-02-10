@@ -1,0 +1,20 @@
+#
+#Tue Feb 10 17:42:32 EET 2015
+Constraints.Output0.Engine.DB.NoSQL.HBase.location=127.0.0.1
+Constraints.Output0.DataInfo.Attributes.Atr1.type=ByteWritable
+Constraints.OpSpecification.Algorithm.Sort.type=ExternalSort
+Constraints.Output0.Engine.DB.NoSQL.HBase.key=Atr1
+Constraints.OpSpecification.Algorithm.Sort.sortingOrder=in1.atr1
+Constraints.Output0.DataInfo.Attributes.Atr2.type=List<ByteWritable>
+Constraints.Input0.DataInfo.Attributes.Atr1.type=ByteWritable
+Constraints.Input0.DataInfo.Attributes.Atr2.type=List<ByteWritable>
+Constraints.Input0.Engine.DB.NoSQL.HBase.value=Atr2
+Constraints.Output0.Engine.DB.NoSQL.HBase.value=Atr2
+Constraints.Output0.DataInfo.Attributes.number=2
+Constraints.EngineSpecification.Distributed.MapReduce.masterLocation=127.0.0.1
+Constraints.Output.number=1
+Constraints.Input0.DataInfo.Attributes.number=2
+Optimization.execTime=100.0
+Constraints.Input.number=1
+Constraints.Input0.Engine.DB.NoSQL.HBase.key=Atr1
+Constraints.Input0.Engine.DB.NoSQL.HBase.location=127.0.0.1
