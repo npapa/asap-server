@@ -1,5 +1,6 @@
 package gr.ntua.cslab.asap.workflow;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,17 +38,21 @@ public class AbstractWorkflow1 {
 
 	public MaterializedWorkflow1 materialize() {
 		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1();
-		
+
 		for(WorkflowNode t : targets){
 			List<WorkflowNode> l = t.materialize(materializedWorkflow, library);
+			WorkflowNode temp = new WorkflowNode(false, false);
+			temp.setDataset(t.dataset);
 			//System.out.println(l+"fsdgd");
-			materializedWorkflow.addTargets(l);
+			temp.addInputs(l);
+			materializedWorkflow.addTarget(temp);
 		}
+		
 		return materializedWorkflow;
 	}
 	
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
 
 		MaterializedOperators library =  new MaterializedOperators();
@@ -118,6 +123,8 @@ public class AbstractWorkflow1 {
 		MaterializedWorkflow1 mw = abstractWorkflow.materialize();
 		System.out.println(abstractWorkflow);
 		System.out.println(mw);
+		mw.printNodes();
+		mw.writeToDir("asapLibrary/workflows/latest");
 		
 	}
 

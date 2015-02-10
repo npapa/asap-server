@@ -3,9 +3,15 @@ package gr.ntua.cslab.asap.workflow;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.Operator;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 public class MaterializedWorkflow1 {
 	private List<WorkflowNode> targets;
@@ -23,6 +29,64 @@ public class MaterializedWorkflow1 {
 		count=0;
 	}
 
+	public void setAllNotVisited(){
+
+		for(WorkflowNode t : targets){
+			t.setAllNotVisited();
+		}
+	}
+	
+	public void printNodes() {
+		for(WorkflowNode t : targets){
+			t.setAllNotVisited();
+		}
+		for(WorkflowNode t : targets){
+			t.printNodes();
+		}
+	}
+	
+
+	public void writeToDir(String directory) throws IOException {
+
+		for(WorkflowNode t : targets){
+			t.setAllNotVisited();
+		}
+		
+        File workflowDir = new File(directory);
+        if (!workflowDir.exists()) {
+        	workflowDir.mkdirs();
+        }
+        File opDir = new File(directory+"/operators");
+        if (!opDir.exists()) {
+        	opDir.mkdirs();
+        }
+        File datasetDir = new File(directory+"/datasets");
+        if (!datasetDir.exists()) {
+        	datasetDir.mkdirs();
+        }
+        File edgeGraph = new File(directory+"/graph");
+    	FileOutputStream fos = new FileOutputStream(edgeGraph);
+    	 
+    	BufferedWriter graphWritter = new BufferedWriter(new OutputStreamWriter(fos));
+    	
+
+		for(WorkflowNode t : targets){
+			t.writeToDir(directory+"/operators",directory+"/datasets",graphWritter);
+			graphWritter.write(t.toStringNorecursive() +",$$target");
+			graphWritter.newLine();
+		}
+    	
+		graphWritter.close();
+        
+        
+	}
+
+	public void readFromDir(String directory) {
+		
+		
+		
+	}
+	
 	public void addTarget(WorkflowNode target) {
 		targets.add(target);
 	}
@@ -34,9 +98,11 @@ public class MaterializedWorkflow1 {
 	public List<WorkflowNode> getTargets() {
 		return targets;
 	}
+	
+	
 
 	public static void main(String[] args) {
-		MaterializedWorkflow1 mw = new MaterializedWorkflow1();
+		/*MaterializedWorkflow1 mw = new MaterializedWorkflow1();
 		
 		WorkflowNode t = new WorkflowNode(false,false);
 		t.setDataset(new Dataset("out2"));
@@ -66,8 +132,15 @@ public class MaterializedWorkflow1 {
 		t2.addInput(t34);
 		
 		System.out.println(mw);
+		mw.printNodes();
+		*/
+		MaterializedWorkflow1 mw = new MaterializedWorkflow1();
+		
+		mw.readFromDir("asapLibrary/workflows/latest");
 		
 	}
+
+
 	
 	
 }

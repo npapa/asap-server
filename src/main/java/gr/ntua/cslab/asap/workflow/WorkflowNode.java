@@ -5,10 +5,14 @@ import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.MaterializedOperators;
 import gr.ntua.cslab.asap.operators.Operator;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WorkflowNode implements Comparable<WorkflowNode>{
+	private boolean visited;
 	public boolean isOperator,isAbstract;
 	public Operator operator;
 	public AbstractOperator abstractOperator;
@@ -19,6 +23,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		this.isOperator = isOperator;
 		this.isAbstract = isAbstract;
 		inputs = new ArrayList<WorkflowNode>();
+		visited=false;
 	} 
 	
 	public void setOperator(Operator operator){
@@ -71,9 +76,9 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 
 						boolean inputMatches=false;
 						for(WorkflowNode in : materializedInputs.get(i)){
-							System.out.println("Checking: "+in.dataset.datasetName);
+							//System.out.println("Checking: "+in.dataset.datasetName);
 							if(tempInput.checkMatch(in.dataset)){
-								System.out.println("true");
+								//System.out.println("true");
 								inputMatches=true;
 								tempInputNode.addInput(in);
 							}
@@ -198,6 +203,49 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 			ret+=" }";
 		}
 		return ret;
+	}
+
+	public void printNodes() {
+		if(!visited){
+			for(WorkflowNode n : inputs){
+				System.out.println(n.toStringNorecursive() +"->"+toStringNorecursive());
+			}
+			for(WorkflowNode n : inputs){
+				n.printNodes();
+			}
+			visited=true;
+		}
+	}
+
+	public void writeToDir(String opDir, String datasetDir,BufferedWriter graphWritter) throws IOException {
+
+		if(!visited){
+
+			if(isOperator){
+				if(isAbstract)
+					abstractOperator.writeToPropertiesFile(opDir+"/"+abstractOperator.opName);
+				else
+					operator.writeToPropertiesFile(opDir+"/"+operator.opName);
+			}
+			else{
+				dataset.writeToPropertiesFile(datasetDir+"/"+dataset.datasetName);
+			}
+			for(WorkflowNode n : inputs){
+				graphWritter.write(n.toStringNorecursive() +","+toStringNorecursive());
+				graphWritter.newLine();
+			}
+			for(WorkflowNode n : inputs){
+				n.writeToDir(opDir, datasetDir, graphWritter);
+			}
+			visited=true;
+		}
+	}
+
+	public void setAllNotVisited() {
+		visited=false;
+		for(WorkflowNode n : inputs){
+			n.setAllNotVisited();
+		}
 	}
 
 }
