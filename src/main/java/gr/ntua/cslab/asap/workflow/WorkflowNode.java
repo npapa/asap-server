@@ -1,5 +1,7 @@
 package gr.ntua.cslab.asap.workflow;
 
+import gr.cslab.asap.rest.beans.OperatorDictionary;
+import gr.cslab.asap.rest.beans.WorkflowDictionary;
 import gr.ntua.cslab.asap.operators.AbstractOperator;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.MaterializedOperators;
@@ -10,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class WorkflowNode implements Comparable<WorkflowNode>{
 	private boolean visited;
@@ -217,6 +220,21 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 	}
 
+
+	public void toWorkflowDictionary(WorkflowDictionary ret, Random ran) {
+		if(!visited){
+	    	OperatorDictionary op = new OperatorDictionary(toStringNorecursive(), ran.nextInt(1000)+"", "running");
+
+			for(WorkflowNode n : inputs){
+				op.addInput(n.toStringNorecursive());
+				n.toWorkflowDictionary(ret, ran);
+			}
+	    	ret.addOperator(op);
+			visited=true;
+		}
+		
+	}
+	
 	public void writeToDir(String opDir, String datasetDir,BufferedWriter graphWritter) throws IOException {
 
 		if(!visited){
@@ -247,5 +265,6 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 			n.setAllNotVisited();
 		}
 	}
+
 
 }

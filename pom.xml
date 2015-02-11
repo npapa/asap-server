@@ -76,7 +76,6 @@
           					<resources>
             					<resource>
                 					<directory>asapLibrary</directory>
-                					<filtering>true</filtering>
             					</resource>
           					</resources>
         				</configuration>

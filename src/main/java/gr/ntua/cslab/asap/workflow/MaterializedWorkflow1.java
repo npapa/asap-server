@@ -1,17 +1,22 @@
 package gr.ntua.cslab.asap.workflow;
 
+import gr.cslab.asap.rest.beans.WorkflowDictionary;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.Operator;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
 
 public class MaterializedWorkflow1 {
 	private List<WorkflowNode> targets;
@@ -43,6 +48,18 @@ public class MaterializedWorkflow1 {
 		for(WorkflowNode t : targets){
 			t.printNodes();
 		}
+	}
+	
+	public WorkflowDictionary toWorkflowDictionary() {
+		for(WorkflowNode t : targets){
+			t.setAllNotVisited();
+		}
+		WorkflowDictionary ret = new WorkflowDictionary();
+    	Random ran = new Random();
+    	for(WorkflowNode target : targets){
+    		target.toWorkflowDictionary(ret, ran);
+    	}
+		return ret;
 	}
 	
 
@@ -81,10 +98,50 @@ public class MaterializedWorkflow1 {
         
 	}
 
-	public void readFromDir(String directory) {
+	public void readFromDir(String directory) throws IOException {
+		HashMap<String,WorkflowNode> nodes = new HashMap<String, WorkflowNode>();
+		File folder = new File(directory+"/operators");
+		File[] files = folder.listFiles();
+
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isFile()) {
+				WorkflowNode n = new WorkflowNode(true, false);
+				Operator temp = new Operator(files[i].getName());
+				temp.readPropertiesFromFile(files[i]);
+				n.setOperator(temp);
+				nodes.put(temp.opName, n);
+			} 
+		}
+		folder = new File(directory+"/datasets");
+		files = folder.listFiles();
+
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isFile()) {
+				WorkflowNode n = new WorkflowNode(false, false);
+				Dataset temp = new Dataset(files[i].getName());
+				temp.readPropertiesFromFile(files[i]);
+				n.setDataset(temp);
+				nodes.put(temp.datasetName, n);
+			} 
+		}
 		
-		
-		
+		File edgeGraph = new File(directory+"/graph");
+		FileInputStream fis = new FileInputStream(edgeGraph);
+		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+	 
+		String line = null;
+		while ((line = br.readLine()) != null) {
+			String[] e =line.split(",");
+			if(e[1].equals("$$target")){
+				this.targets.add(nodes.get(e[0]));
+			}
+			else{
+				WorkflowNode src = nodes.get(e[0]);
+				WorkflowNode dest = nodes.get(e[1]);
+				dest.inputs.add(src);
+			}
+		}
+		br.close();
 	}
 	
 	public void addTarget(WorkflowNode target) {
@@ -101,7 +158,7 @@ public class MaterializedWorkflow1 {
 	
 	
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		/*MaterializedWorkflow1 mw = new MaterializedWorkflow1();
 		
 		WorkflowNode t = new WorkflowNode(false,false);
@@ -137,8 +194,10 @@ public class MaterializedWorkflow1 {
 		MaterializedWorkflow1 mw = new MaterializedWorkflow1();
 		
 		mw.readFromDir("asapLibrary/workflows/latest");
-		
+		System.out.println(mw);
 	}
+
+
 
 
 	

@@ -1,7 +1,9 @@
 package gr.ntua.cslab.asap.daemon.rest;
 
 import gr.cslab.asap.rest.beans.*;
+import gr.ntua.cslab.asap.workflow.MaterializedWorkflow1;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
@@ -26,8 +28,15 @@ public class Workflows {
 
 	@GET
 	@Produces("application/json")
-    public WorkflowDictionary listOperators() {
-    	WorkflowDictionary ret = new WorkflowDictionary();
+    public WorkflowDictionary listOperators() throws IOException {
+
+		MaterializedWorkflow1 mw = new MaterializedWorkflow1();
+		
+		mw.readFromDir("asapLibrary/workflows/latest");
+		WorkflowDictionary ret = mw.toWorkflowDictionary();
+		
+		
+    	/*WorkflowDictionary ret = new WorkflowDictionary();
     	Random ran = new Random();
     	OperatorDictionary op = new OperatorDictionary("test", ran.nextInt(1000)+"", "stopped");
     	OperatorDictionary op1 = new OperatorDictionary("test1", ran.nextInt(1000)+"", "running");
@@ -42,7 +51,7 @@ public class Workflows {
     	ret.addOperator(op);
     	ret.addOperator(op1);
     	ret.addOperator(op2);
-    	ret.addOperator(op3);
+    	ret.addOperator(op3);*/
     	
         return ret;
     }
