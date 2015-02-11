@@ -1,9 +1,13 @@
 package gr.ntua.cslab.asap.daemon.rest;
 
+import gr.ntua.cslab.asap.daemon.AbstractWorkflowLibrary;
 import gr.ntua.cslab.asap.daemon.Main;
-import gr.ntua.cslab.asap.operators.OperatorLibrary;
+import gr.ntua.cslab.asap.daemon.MaterializedWorkflowLibrary;
+import gr.ntua.cslab.asap.daemon.OperatorLibrary;
+import gr.ntua.cslab.asap.operators.Operator;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,6 +20,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
@@ -27,7 +32,8 @@ public class WebUI {
     public Logger logger = Logger.getLogger(WebUI.class);
     private static String header=readFile("header.html");
     private static String footer=readFile("footer.html");
-    private static String workflow=readFile("workflow.html");
+    private static String workflowUp=readFile("workflowUp.html").trim();
+    private static String workflowLow=readFile("workflowLow.html");
     
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -47,10 +53,15 @@ public class WebUI {
     	List<String> l = OperatorLibrary.getOperators();
     	ret += "<ul>";
     	for(String op : l){
-			ret+= "<li><a href=\"operators/"+op+"\">"+op+"</a></li>";
+			ret+= "<li><a href=\"/web/operators/"+op+"\">"+op+"</a></li>";
     		
     	}
     	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"4\" cols=\"50\" name=\"opString\"></textarea>"
+			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
         return ret;
@@ -62,12 +73,46 @@ public class WebUI {
     @Path("/operators/{id}/")
     public String operatorDescription(@PathParam("id") String id) throws IOException {
     	String ret = header;
+    	ret+= "<h1>"+id+"</h1>";
     	ret += "<p>"+OperatorLibrary.getOperatorDescription(id)+"</p>";
     	ret += footer;
         return ret;
     }
     
 
+    @GET
+    @Path("/operators/addOperator/")
+    @Produces(MediaType.TEXT_HTML)
+    public String addOperator(
+            @QueryParam("opname") String opname,
+            @QueryParam("opString") String opString) throws IOException {
+    	String ret = header;
+    	OperatorLibrary.addOperator(opname, opString);
+    	List<String> l = OperatorLibrary.getOperators();
+    	ret += "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"/web/operators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"4\" cols=\"50\" name=\"opString\"></textarea>"
+			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+    	
+    	ret += footer;
+    	return ret;
+    }
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/workflows/{id}/")
+    public String workflowDescription(@PathParam("id") String id) throws IOException {
+    	String ret = header+workflowUp+"/workflows/"+id+workflowLow;
+    	ret += footer;
+        return ret;
+    }
     
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -75,10 +120,14 @@ public class WebUI {
     public String listWorkflows() throws IOException {
     	String ret = header;
     	ret += "<ul>";
-		ret+= "<li><a href=\"workflows/"+"DBanalytics"+"\">"+"DBanalytics"+"</a></li>";
+
+    	List<String> l = MaterializedWorkflowLibrary.getWorkflows();
+    	ret += "<ul>";
+    	for(String w : l){
+			ret+= "<li><a href=\"/web/workflows/"+w+"\">"+w+"</a></li>";
     		
-    	ret+="</ul>";
-    	
+    	}
+    	ret+="</ul>\n";
     	ret += footer;
         return ret;
     }
@@ -86,14 +135,31 @@ public class WebUI {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Path("/workflows/{id}/")
-    public String workflowDescription(@PathParam("id") String id) throws IOException {
-    	String ret = header+workflow;
-    	
-    	
+    @Path("/abstractWorkflows/{id}/")
+    public String abstractWorkflowDescription(@PathParam("id") String id) throws IOException {
+    	String ret = header+workflowUp+"/abstractWorkflows/"+id+workflowLow;
     	ret += footer;
         return ret;
     }
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/abstractWorkflows/")
+    public String listAbstractWorkflows() throws IOException {
+    	String ret = header;
+
+    	List<String> l = AbstractWorkflowLibrary.getWorkflows();
+    	ret += "<ul>";
+    	for(String w : l){
+			ret+= "<li><a href=\"/web/abstractWorkflows/"+w+"\">"+w+"</a></li>";
+    		
+    	}
+    	ret+="</ul>\n";
+    	ret += footer;
+        return ret;
+    }
+
+
     
     private static String readFile(String name){
     	InputStream stream = Main.class.getClassLoader().getResourceAsStream(name);

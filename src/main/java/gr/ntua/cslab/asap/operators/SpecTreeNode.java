@@ -175,14 +175,14 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 		}
 	}
 
-	public String toKeyValues(String curentPath, String ret) {
+	public String toKeyValues(String curentPath, String ret, String separator) {
 		if(children.size()==0){
-			ret+= curentPath+name+" = "+value+"<br>";
+			ret+= curentPath+name+" = "+value+separator;
 		}
 		else{
 			curentPath+=name+".";
 			for(SpecTreeNode n : children.values()){
-				ret =n.toKeyValues(curentPath, ret);
+				ret =n.toKeyValues(curentPath, ret, separator);
 			}
 		}
 		return ret;

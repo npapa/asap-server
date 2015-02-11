@@ -74,9 +74,9 @@ public class SpecTree {
 		}
 	}
 
-	public String toKeyValues(String curentPath, String ret) {
+	public String toKeyValues(String curentPath, String ret, String separator) {
 		for(SpecTreeNode n : tree.values()){
-			ret =n.toKeyValues(curentPath, ret);
+			ret =n.toKeyValues(curentPath, ret, separator);
 		}
 		return ret;
 	}

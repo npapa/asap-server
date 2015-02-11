@@ -1,6 +1,7 @@
 package gr.ntua.cslab.asap.daemon.rest;
 
 import gr.cslab.asap.rest.beans.*;
+import gr.ntua.cslab.asap.daemon.MaterializedWorkflowLibrary;
 import gr.ntua.cslab.asap.workflow.MaterializedWorkflow1;
 
 import java.io.IOException;
@@ -54,5 +55,12 @@ public class Workflows {
     	ret.addOperator(op3);*/
     	
         return ret;
+    }
+
+	@GET
+	@Produces("application/json")
+	@Path("/{id}/")
+    public WorkflowDictionary getDescription(@PathParam("id") String id) throws IOException {
+        return MaterializedWorkflowLibrary.getWorkflow(id);
     }
 }

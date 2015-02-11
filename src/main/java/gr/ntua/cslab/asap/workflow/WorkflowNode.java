@@ -2,6 +2,7 @@ package gr.ntua.cslab.asap.workflow;
 
 import gr.cslab.asap.rest.beans.OperatorDictionary;
 import gr.cslab.asap.rest.beans.WorkflowDictionary;
+import gr.ntua.cslab.asap.daemon.OperatorLibrary;
 import gr.ntua.cslab.asap.operators.AbstractOperator;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.MaterializedOperators;
@@ -50,18 +51,18 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 	}
 
 
-	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow, MaterializedOperators library) {
+	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow) {
 		//System.out.println("Processing : "+toStringNorecursive());
 		List<WorkflowNode> ret = new ArrayList<WorkflowNode>();
 		List<List<WorkflowNode>> materializedInputs = new ArrayList<List<WorkflowNode>>();
 		for(WorkflowNode in : inputs){
-			List<WorkflowNode> l = in.materialize(materializedWorkflow, library);
+			List<WorkflowNode> l = in.materialize(materializedWorkflow);
 			materializedInputs.add(l);
 		}
 		//System.out.println(materializedInputs);
 		if(isOperator){
 			if(isAbstract){
-				List<Operator> operators = library.getMatches(abstractOperator);
+				List<Operator> operators = OperatorLibrary.getMatches(abstractOperator);
 				for(Operator op : operators){
 					//System.out.println("Materialized operator: "+op.opName);
 					WorkflowNode temp = new WorkflowNode(true, false);
@@ -87,7 +88,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 							}
 							else{
 								//check move
-								List<Operator> moveOps = library.checkMove(in.dataset, tempInput);
+								List<Operator> moveOps = OperatorLibrary.checkMove(in.dataset, tempInput);
 								if(!moveOps.isEmpty()){
 									inputMatches=true;
 									for(Operator m : moveOps){
@@ -223,7 +224,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 
 	public void toWorkflowDictionary(WorkflowDictionary ret, Random ran) {
 		if(!visited){
-	    	OperatorDictionary op = new OperatorDictionary(toStringNorecursive(), ran.nextInt(1000)+"", "running");
+	    	OperatorDictionary op = new OperatorDictionary(toStringNorecursive(), ran.nextInt(1000)+"", "running", isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
 
 			for(WorkflowNode n : inputs){
 				op.addInput(n.toStringNorecursive());
@@ -235,6 +236,20 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		
 	}
 	
+	public String toKeyValueString() {
+		if(isOperator){
+			if(isAbstract){
+				return abstractOperator.toKeyValues("\n");
+			}
+			else{
+				return operator.toKeyValues("\n");
+			}
+		}
+		else{
+			return dataset.toKeyValues("\n");
+		}
+	}
+
 	public void writeToDir(String opDir, String datasetDir,BufferedWriter graphWritter) throws IOException {
 
 		if(!visited){

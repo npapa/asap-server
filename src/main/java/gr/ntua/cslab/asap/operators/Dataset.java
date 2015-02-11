@@ -86,4 +86,10 @@ public class Dataset implements Comparable<Dataset> {
 		}
 		stream.close();
 	}
+	
+	public String toKeyValues(String separator) {
+		String ret ="";
+		ret+=datasetTree.toKeyValues("", ret, separator);
+		return ret;
+	}
 }

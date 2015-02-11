@@ -1,9 +1,19 @@
 package gr.ntua.cslab.asap.workflow;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
+import gr.cslab.asap.rest.beans.WorkflowDictionary;
 import gr.ntua.cslab.asap.operators.AbstractOperator;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.MaterializedOperators;
@@ -12,16 +22,14 @@ import gr.ntua.cslab.asap.operators.Operator;
 
 public class AbstractWorkflow1 {
 	private List<WorkflowNode> targets;
-	public MaterializedOperators library;
 
 	@Override
 	public String toString() {
 		return targets.toString();
 	}
 	
-	public AbstractWorkflow1(MaterializedOperators library) {
+	public AbstractWorkflow1() {
 		targets = new ArrayList<WorkflowNode>();
-		this.library = library;
 	}
 
 	public void addTarget(WorkflowNode target) {
@@ -40,7 +48,7 @@ public class AbstractWorkflow1 {
 		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1();
 
 		for(WorkflowNode t : targets){
-			List<WorkflowNode> l = t.materialize(materializedWorkflow, library);
+			List<WorkflowNode> l = t.materialize(materializedWorkflow);
 			WorkflowNode temp = new WorkflowNode(false, false);
 			temp.setDataset(t.dataset);
 			//System.out.println(l+"fsdgd");
@@ -51,12 +59,106 @@ public class AbstractWorkflow1 {
 		return materializedWorkflow;
 	}
 	
+	public void writeToDir(String directory) throws IOException {
+
+		for(WorkflowNode t : targets){
+			t.setAllNotVisited();
+		}
+		
+        File workflowDir = new File(directory);
+        if (!workflowDir.exists()) {
+        	workflowDir.mkdirs();
+        }
+        File opDir = new File(directory+"/operators");
+        if (!opDir.exists()) {
+        	opDir.mkdirs();
+        }
+        File datasetDir = new File(directory+"/datasets");
+        if (!datasetDir.exists()) {
+        	datasetDir.mkdirs();
+        }
+        File edgeGraph = new File(directory+"/graph");
+    	FileOutputStream fos = new FileOutputStream(edgeGraph);
+    	 
+    	BufferedWriter graphWritter = new BufferedWriter(new OutputStreamWriter(fos));
+    	
+
+		for(WorkflowNode t : targets){
+			t.writeToDir(directory+"/operators",directory+"/datasets",graphWritter);
+			graphWritter.write(t.toStringNorecursive() +",$$target");
+			graphWritter.newLine();
+		}
+    	
+		graphWritter.close();
+        
+        
+	}
+	
+
+	public void readFromDir(String directory) throws IOException {
+		HashMap<String,WorkflowNode> nodes = new HashMap<String, WorkflowNode>();
+		File folder = new File(directory+"/operators");
+		File[] files = folder.listFiles();
+
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isFile()) {
+				WorkflowNode n = new WorkflowNode(true, true);
+				AbstractOperator temp = new AbstractOperator(files[i].getName());
+				temp.readPropertiesFromFile(files[i]);
+				n.setAbstractOperator(temp);
+				nodes.put(temp.opName, n);
+			} 
+		}
+		folder = new File(directory+"/datasets");
+		files = folder.listFiles();
+
+		for (int i = 0; i < files.length; i++) {
+			if (files[i].isFile()) {
+				WorkflowNode n = new WorkflowNode(false, false);
+				Dataset temp = new Dataset(files[i].getName());
+				temp.readPropertiesFromFile(files[i]);
+				n.setDataset(temp);
+				nodes.put(temp.datasetName, n);
+			} 
+		}
+		
+		File edgeGraph = new File(directory+"/graph");
+		FileInputStream fis = new FileInputStream(edgeGraph);
+		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+	 
+		String line = null;
+		while ((line = br.readLine()) != null) {
+			String[] e =line.split(",");
+			if(e[1].equals("$$target")){
+				this.targets.add(nodes.get(e[0]));
+			}
+			else{
+				WorkflowNode src = nodes.get(e[0]);
+				WorkflowNode dest = nodes.get(e[1]);
+				dest.inputs.add(src);
+			}
+		}
+		br.close();
+	}
+	
+	public WorkflowDictionary toWorkflowDictionary() {
+		for(WorkflowNode t : targets){
+			t.setAllNotVisited();
+		}
+		WorkflowDictionary ret = new WorkflowDictionary();
+    	Random ran = new Random();
+    	for(WorkflowNode target : targets){
+    		target.toWorkflowDictionary(ret, ran);
+    	}
+		return ret;
+	}
+	
 	
 	public static void main(String[] args) throws IOException {
 		
 
 		MaterializedOperators library =  new MaterializedOperators();
-		AbstractWorkflow1 abstractWorkflow = new AbstractWorkflow1(library);
+		AbstractWorkflow1 abstractWorkflow = new AbstractWorkflow1();
 		Dataset d1 = new Dataset("hbaseDataset");
 		d1.add("Constraints.DataInfo.Attributes.number","2");
 		d1.add("Constraints.DataInfo.Attributes.Atr1.type","ByteWritable");
@@ -120,13 +222,18 @@ public class AbstractWorkflow1 {
 		op2.addInput(t3);
 		t4.addInput(op2);
 		abstractWorkflow.addTarget(t4);
+
+		abstractWorkflow.writeToDir("asapLibrary/abstractWorkflows/DataAnalytics");
+		System.exit(0);
 		MaterializedWorkflow1 mw = abstractWorkflow.materialize();
 		System.out.println(abstractWorkflow);
 		System.out.println(mw);
 		mw.printNodes();
-		mw.writeToDir("asapLibrary/workflows/latest");
 		
 	}
+
+
+
 
 
 

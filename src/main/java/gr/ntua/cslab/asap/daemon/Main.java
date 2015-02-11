@@ -3,8 +3,6 @@ package gr.ntua.cslab.asap.daemon;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.sun.xml.internal.bind.CycleRecoverable.Context;
 
-import gr.ntua.cslab.asap.operators.OperatorLibrary;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -158,12 +156,18 @@ public class Main {
         if (!workflowDir.exists()) {
         	workflowDir.mkdir();
         }
+        File abstractworkflowDir = new File(folder+"/abstractWorkflows");
+        if (!abstractworkflowDir.exists()) {
+        	abstractworkflowDir.mkdir();
+        }
         
         
     }
 
-	private static void loadOperators() throws IOException {
+	private static void load() throws IOException {
 		OperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/operators");
+		AbstractWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractWorkflows");
+		MaterializedWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/workflows");
 	}
 	
 	
@@ -173,7 +177,7 @@ public class Main {
         creatDirs();
         addShutdownHook();
         configureServer();
-        loadOperators();
+        load();
 
         ServerStaticComponents.server.start();
         Logger.getLogger(Main.class.getName()).info("Server is started");

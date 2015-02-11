@@ -10,17 +10,22 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name = "operator")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class OperatorDictionary {
-	private String name, cost, status;
+	private String name, cost, status, isOperator, description;
 	private List<String> input;
 	
 	public OperatorDictionary() {
 		input = new ArrayList<String>();
 	}
 	
-	public OperatorDictionary(String name, String cost, String status) {
+	public OperatorDictionary(String name, String cost, String status, String isOperator, String description) {
 		this.name = name;
 		this.cost = cost;
-		this.status = status;
+		if(isOperator.equals("true"))
+			this.status = "running";
+		else
+			this.status = "stopped";
+		this.isOperator = isOperator;
+		this.description = description;
 		input = new ArrayList<String>();
 	}
 	

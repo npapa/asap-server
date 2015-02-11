@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 public class Operator {
 	public SpecTree optree;
@@ -23,6 +24,7 @@ public class Operator {
 	}
 
 	public void add(String key, String value) {
+        //Logger.getLogger(Main.class.getName()).info("key: "+key+" value: "+value);
 		optree.add(key,value);
 	}
 	
@@ -33,9 +35,9 @@ public class Operator {
 		return ret;
 	}
 	
-	public String toKeyValues() {
+	public String toKeyValues(String separator) {
 		String ret ="";
-		ret+=optree.toKeyValues("", ret);
+		ret+=optree.toKeyValues("", ret,separator);
 		return ret;
 	}
 		
@@ -60,6 +62,16 @@ public class Operator {
 		stream.close();
 	}
 	
+
+
+	public void readPropertiesFromFile(InputStream stream) throws IOException {
+		Properties props = new Properties();
+		props.load(stream);
+		for(Entry<Object, Object> e : props.entrySet()){
+			add((String)e.getKey(), (String)e.getValue());
+		}
+	}
+	
 	public void writeToPropertiesFile(String filename) throws IOException {
         Properties props = new Properties();
 
@@ -78,7 +90,7 @@ public class Operator {
 	public static void main(String[] args) throws IOException {
 		Operator op = new Operator("HBase_HashJoin");
 		op.readPropertiesFromFile("/home/nikos/test1");
-		System.out.println(op.toKeyValues());
+		System.out.println(op.toKeyValues("\n"));
 		System.exit(0);
 		
 		op.add("Constraints.Input1.DataInfo.Attributes.number","2");
@@ -107,7 +119,7 @@ public class Operator {
 
 		//op.add("Properties.MaintainTags", ".*");
 		
-		System.out.println(op.toKeyValues());
+		System.out.println(op.toKeyValues("\n"));
 
 		Operator op1 = new Operator("HBase_HashJoin");
 		op1.add("Constraints.Input1.DataInfo.Attributes.number","1");
