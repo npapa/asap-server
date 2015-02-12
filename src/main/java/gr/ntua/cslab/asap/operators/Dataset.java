@@ -45,7 +45,7 @@ public class Dataset implements Comparable<Dataset> {
 	}
 
 	public boolean checkMatch(Dataset d) {
-		logger.info("Checking match: "+ this.toString()+"  -  "+d );
+		//logger.info("Checking match: "+ this.toString()+"  -  "+d );
 		return datasetTree.checkMatch(d.datasetTree);
 	}
 

@@ -65,7 +65,7 @@ public class WebUI {
     		+ "<form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
         return ret;
@@ -80,13 +80,13 @@ public class WebUI {
     	ret+= "<h1>"+id+"</h1>";
     	ret += "<p>"+AbstractOperatorLibrary.getOperatorDescription(id)+"</p>";
 
-    	ret+="<div><form action=\"/web/abstractOperators/checkMatches\" method=\"get\">"
+    	ret+="<div><p><form action=\"/web/abstractOperators/checkMatches\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input type=\"submit\" value=\"Check matches\"><form></div>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Check matches\"><form></p>";
 
-    	ret+="<div><form action=\"/web/abstractOperators/deleteOperator\" method=\"get\">"
+    	ret+="<p><form action=\"/web/abstractOperators/deleteOperator\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input type=\"submit\" value=\"Delete operator\"><form></div>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"><form></p></div>";
     	
     	ret += footer;
         return ret;
@@ -128,7 +128,7 @@ public class WebUI {
     	ret+="<div><form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
     	return ret;
@@ -155,7 +155,7 @@ public class WebUI {
     	ret+="<div><form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
     	return ret;
@@ -180,7 +180,7 @@ public class WebUI {
     		+ "<form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
         return ret;
@@ -197,7 +197,7 @@ public class WebUI {
 
     	ret+="<div><form action=\"/web/operators/deleteOperator\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input type=\"submit\" value=\"Delete operator\"><form></div>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"><form></div>";
     	
     	ret += footer;
         return ret;
@@ -221,7 +221,7 @@ public class WebUI {
     	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
     	return ret;
@@ -246,7 +246,7 @@ public class WebUI {
     	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
     	return ret;
@@ -306,9 +306,9 @@ public class WebUI {
     	String ret = header+abstractWorkflowUp+"/abstractWorkflows/"+id+workflowLow;
     	ret+="</div>";
     	
-    	ret+="<div><form action=\"/web/abstractWorkflows/materialize\" method=\"get\">"
+    	ret+="<div  class=\"mainpage\"><form action=\"/web/abstractWorkflows/materialize\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+id+"\">"
-			+ "<input type=\"submit\" value=\"Materialize Workflow\"><form>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Materialize Workflow\"><form>";
     	
     	ret += footer;
         return ret;

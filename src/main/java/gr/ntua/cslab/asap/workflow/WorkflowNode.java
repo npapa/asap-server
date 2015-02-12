@@ -54,19 +54,19 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 
 
 	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow) {
-		logger.info("Processing : "+toStringNorecursive());
+		//logger.info("Processing : "+toStringNorecursive());
 		List<WorkflowNode> ret = new ArrayList<WorkflowNode>();
 		List<List<WorkflowNode>> materializedInputs = new ArrayList<List<WorkflowNode>>();
 		for(WorkflowNode in : inputs){
 			List<WorkflowNode> l = in.materialize(materializedWorkflow);
 			materializedInputs.add(l);
 		}
-		logger.info(materializedInputs);
+		//logger.info(materializedInputs);
 		if(isOperator){
 			if(isAbstract){
 				List<Operator> operators = OperatorLibrary.getMatches(abstractOperator);
 				for(Operator op : operators){
-					logger.info("Materialized operator: "+op.opName);
+					//logger.info("Materialized operator: "+op.opName);
 					WorkflowNode temp = new WorkflowNode(true, false);
 					temp.setOperator(op);
 					int inputs = Integer.parseInt(op.getParameter("Constraints.Input.number"));
@@ -90,8 +90,10 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 							}
 							else{
 								//check move
+								logger.info("Check move ");
 								List<Operator> moveOps = OperatorLibrary.checkMove(in.dataset, tempInput);
 								if(!moveOps.isEmpty()){
+									logger.info("true");
 									inputMatches=true;
 									for(Operator m : moveOps){
 										WorkflowNode moveNode = new WorkflowNode(true, false);

@@ -48,15 +48,15 @@ public class OperatorLibrary {
 	}
 	
 	public static List<Operator> getMatches(AbstractOperator abstractOperator){
-		logger.info("Check matches: "+abstractOperator.opName);
+		//logger.info("Check matches: "+abstractOperator.opName);
 		List<Operator> ret = new ArrayList<Operator>();
 		for(Operator op : operators.values()){
 			if(abstractOperator.checkMatch(op))
 				ret.add(op);
 		}
-		for(Operator o :ret){
-			logger.info("Found: "+o.opName);
-		}
+		//for(Operator o :ret){
+		//	logger.info("Found: "+o.opName);
+		//}
 		return ret;
 	}
 	
