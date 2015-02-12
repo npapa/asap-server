@@ -81,6 +81,14 @@ public class Dataset implements Comparable<Dataset> {
 		stream.close();
 	}
 
+	public void readPropertiesFromFile(InputStream stream) throws IOException{
+		Properties props = new Properties();
+		props.load(stream);
+		for(Entry<Object, Object> e : props.entrySet()){
+			add((String)e.getKey(), (String)e.getValue());
+		}
+		stream.close();
+	}
 	public void readPropertiesFromFile(File file) throws IOException{
 		InputStream stream = new FileInputStream(file);
 		Properties props = new Properties();
@@ -96,4 +104,5 @@ public class Dataset implements Comparable<Dataset> {
 		ret+=datasetTree.toKeyValues("", ret, separator);
 		return ret;
 	}
+
 }

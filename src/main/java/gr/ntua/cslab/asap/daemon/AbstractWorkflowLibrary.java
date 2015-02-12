@@ -53,4 +53,25 @@ public class AbstractWorkflowLibrary {
 		return mw.name;
 	}
 
+	public static String getGraphDescription(String workflowName) throws IOException {
+		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
+		
+		return aw.graphToString();
+	}
+
+	public static void changeWorkflow(String workflowName, String workflowGraph) throws IOException {
+		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
+		aw.changeEdges(workflowGraph);
+		
+	}
+	
+	public static void newWorkflow(String workflowName) {
+		AbstractWorkflow1 aw = new AbstractWorkflow1(workflowName);
+		abstractWorkflows.put(workflowName, aw);
+	}
+
+	public static void addNode(String workflowName, String type, String name) {
+		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
+		aw.addNode(type, name);
+	}
 }

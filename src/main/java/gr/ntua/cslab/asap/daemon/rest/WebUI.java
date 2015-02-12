@@ -2,6 +2,7 @@ package gr.ntua.cslab.asap.daemon.rest;
 
 import gr.ntua.cslab.asap.daemon.AbstractOperatorLibrary;
 import gr.ntua.cslab.asap.daemon.AbstractWorkflowLibrary;
+import gr.ntua.cslab.asap.daemon.DatasetLibrary;
 import gr.ntua.cslab.asap.daemon.Main;
 import gr.ntua.cslab.asap.daemon.MaterializedWorkflowLibrary;
 import gr.ntua.cslab.asap.daemon.OperatorLibrary;
@@ -65,7 +66,7 @@ public class WebUI {
     		+ "<form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
     	
     	ret += footer;
         return ret;
@@ -82,11 +83,11 @@ public class WebUI {
 
     	ret+="<div><p><form action=\"/web/abstractOperators/checkMatches\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Check matches\"><form></p>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Check matches\"></form></p>";
 
     	ret+="<p><form action=\"/web/abstractOperators/deleteOperator\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"><form></p></div>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form></p></div>";
     	
     	ret += footer;
         return ret;
@@ -128,7 +129,7 @@ public class WebUI {
     	ret+="<div><form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
     	
     	ret += footer;
     	return ret;
@@ -155,7 +156,7 @@ public class WebUI {
     	ret+="<div><form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
     	
     	ret += footer;
     	return ret;
@@ -180,7 +181,7 @@ public class WebUI {
     		+ "<form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
     	
     	ret += footer;
         return ret;
@@ -197,7 +198,7 @@ public class WebUI {
 
     	ret+="<div><form action=\"/web/operators/deleteOperator\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"><form></div>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form></div>";
     	
     	ret += footer;
         return ret;
@@ -221,7 +222,7 @@ public class WebUI {
     	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
     	
     	ret += footer;
     	return ret;
@@ -246,11 +247,105 @@ public class WebUI {
     	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
-			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"><form></div>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
     	
     	ret += footer;
     	return ret;
     }
+    
+    
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/datasets/")
+    public String listDatasets() throws IOException {
+    	String ret = header;
+    	List<String> l = DatasetLibrary.getDatasets();
+    	ret += "<ul>";
+    	for(String d : l){
+			ret+= "<li><a href=\"/web/datasets/"+d+"\">"+d+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><h2>Add dataset:</h2>"
+    		+ "<form action=\"/web/datasets/addDataset\" method=\"get\">"
+			+ "Dataset name: <input type=\"text\" name=\"dname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"dString\"></textarea>"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add dataset\"></form></div>";
+    	
+    	ret += footer;
+        return ret;
+    }
+    
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/datasets/{id}/")
+    public String datasetDescription(@PathParam("id") String id) throws IOException {
+    	String ret = header;
+    	ret+= "<h1>"+id+"</h1>";
+    	ret += "<p>"+DatasetLibrary.getDatasetDescription(id)+"</p>";
+
+    	ret+="<div><form action=\"/web/datasets/deleteDataset\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"dname\" value=\""+id+"\">"
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete dataset\"></form></div>";
+    	
+    	ret += footer;
+        return ret;
+    }
+
+    @GET
+    @Path("/datasets/deleteDataset/")
+    @Produces(MediaType.TEXT_HTML)
+    public String deleteDataset(
+            @QueryParam("dname") String dname) throws IOException {
+    	String ret = header;
+    	DatasetLibrary.deleteDataset(dname);
+    	List<String> l = DatasetLibrary.getDatasets();
+    	ret += "<ul>";
+    	for(String d : l){
+			ret+= "<li><a href=\"/web/datasets/"+d+"\">"+d+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/datasets/addDataset\" method=\"get\">"
+			+ "Dataset name: <input type=\"text\" name=\"dname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"dString\"></textarea>"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add dataset\"></form></div>";
+    	
+    	ret += footer;
+    	return ret;
+    }
+
+    @GET
+    @Path("/datasets/addDataset/")
+    @Produces(MediaType.TEXT_HTML)
+    public String addDataset(
+            @QueryParam("dname") String dname,
+            @QueryParam("dString") String dString) throws IOException {
+    	String ret = header;
+    	DatasetLibrary.addDataset(dname, dString);
+    	List<String> l = DatasetLibrary.getDatasets();
+    	ret += "<ul>";
+    	for(String d : l){
+			ret+= "<li><a href=\"/web/datasets/"+d+"\">"+d+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/datasets/addDataset\" method=\"get\">"
+			+ "Dataset name: <input type=\"text\" name=\"dname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"dString\"></textarea>"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add dataset\"></form></div>";
+    	
+    	ret += footer;
+    	return ret;
+    }
+
+    
+    
 
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -294,24 +389,79 @@ public class WebUI {
     		
     	}
     	ret+="</ul>\n";
-    	
+
+    	ret+="</div>";
+
+    	ret+="<div  class=\"mainpage\"><p><form action=\"/web/abstractWorkflows/newWorkflow\" method=\"get\">"
+    		+ "<p>Name: <input type=\"text\" name=\"workflowName\"></p>"
+			+ "<p><input class=\"styled-button\" type=\"submit\" value=\"New Workflow\"></form></p>";
     	ret += footer;
         return ret;
+    }
+
+    private String abstractWorkflowView(String workflowName) throws IOException{
+
+    	String ret = header+abstractWorkflowUp+"/abstractWorkflows/"+workflowName+workflowLow;
+    	ret+="</div>";
+
+    	ret+="<div  class=\"mainpage\"><p><form action=\"/web/abstractWorkflows/materialize\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\">"
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Materialize Workflow\"></form></p>";
+    	
+    	ret+="<p><form action=\"/web/abstractWorkflows/addNode\" method=\"get\">"
+    			+ "Name: <input type=\"text\" name=\"name\"><br>"
+    			+ "<p><input type=\"radio\" name=\"type\" value=\"1\" checked>Abstract Operator<br>"
+    			+ "<input type=\"radio\" name=\"type\" value=\"2\">Materialized Operator<br>"
+    			+ "<input type=\"radio\" name=\"type\" value=\"3\">Abstract Dataset<br>"
+    			+ "<input type=\"radio\" name=\"type\" value=\"4\">Materialized Dataset<br>"
+    			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\"></p>"
+    			+ "<p><input class=\"styled-button\" type=\"submit\" value=\"Add node\"></form></p>";
+    	
+    	ret+="<p><form action=\"/web/abstractWorkflows/changeGraph\" method=\"get\">"
+    		+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\">"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"workflowGraph\">"+AbstractWorkflowLibrary.getGraphDescription(workflowName)+"</textarea>"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Change graph\"></form></p>";
+    	
+    	
+    	ret += footer;
+    	return ret;
+    }
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/abstractWorkflows/newWorkflow/")
+    public String newWorkflow(@QueryParam("workflowName") String workflowName) throws IOException {
+    	AbstractWorkflowLibrary.newWorkflow(workflowName);
+        return abstractWorkflowView(workflowName);
     }
     
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Path("/abstractWorkflows/{id}/")
-    public String abstractWorkflowDescription(@PathParam("id") String id) throws IOException {
-    	String ret = header+abstractWorkflowUp+"/abstractWorkflows/"+id+workflowLow;
-    	ret+="</div>";
+    @Path("/abstractWorkflows/changeGraph/")
+    public String changeAbstractWorkflowDescription(@QueryParam("workflowName") String workflowName, @QueryParam("workflowGraph") String workflowGraph) throws IOException {
+    	logger.info("workflowName: "+workflowName);
+    	logger.info("workflowGraph: "+workflowGraph);
     	
-    	ret+="<div  class=\"mainpage\"><form action=\"/web/abstractWorkflows/materialize\" method=\"get\">"
-			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Materialize Workflow\"><form>";
+    	AbstractWorkflowLibrary.changeWorkflow(workflowName, workflowGraph);
     	
-    	ret += footer;
-        return ret;
+        return abstractWorkflowView(workflowName);
+    }
+    
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/abstractWorkflows/addNode/")
+    public String addNodeToWorkflow(@QueryParam("workflowName") String workflowName, @QueryParam("type") String type, @QueryParam("name") String name) throws IOException {
+    	AbstractWorkflowLibrary.addNode(workflowName, type, name);
+
+        return abstractWorkflowView(workflowName);
+    }
+    
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/abstractWorkflows/{workflowName}/")
+    public String abstractWorkflowDescription(@PathParam("workflowName") String workflowName) throws IOException {
+
+        return abstractWorkflowView(workflowName);
     }
     
 
@@ -355,5 +505,6 @@ public class WebUI {
 		}
         return out.toString();
     }
+
     
 }

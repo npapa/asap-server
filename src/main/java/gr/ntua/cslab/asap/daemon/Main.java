@@ -169,6 +169,7 @@ public class Main {
     }
 
 	private static void load() throws IOException {
+		DatasetLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/datasets");
 		AbstractOperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractOperators");
 		OperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/operators");
 		AbstractWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractWorkflows");

@@ -278,6 +278,27 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 			visited=true;
 		}
 	}
+	
+	public void graphToString(BufferedWriter graphWritter) throws IOException {
+		for(WorkflowNode n : inputs){
+			graphWritter.write(n.toStringNorecursive() +","+toStringNorecursive());
+			graphWritter.newLine();
+		}
+	}
+
+	public void graphToStringRecursive(BufferedWriter graphWritter) throws IOException {
+
+		if(!visited){
+			for(WorkflowNode n : inputs){
+				graphWritter.write(n.toStringNorecursive() +","+toStringNorecursive());
+				graphWritter.newLine();
+			}
+			for(WorkflowNode n : inputs){
+				n.graphToString(graphWritter);
+			}
+			visited=true;
+		}
+	}
 
 	public void setAllNotVisited() {
 		visited=false;
@@ -285,6 +306,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 			n.setAllNotVisited();
 		}
 	}
+
 
 
 }

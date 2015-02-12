@@ -92,4 +92,10 @@ public class OperatorLibrary {
 		File file = new File(operatorDirectory+"/"+op.opName);
 		file.delete();
 	}
+	
+
+	public static Operator getOperator(String opname) {
+		return operators.get(opname);
+	}
+
 }

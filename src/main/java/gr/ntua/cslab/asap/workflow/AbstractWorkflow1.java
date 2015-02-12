@@ -2,6 +2,8 @@ package gr.ntua.cslab.asap.workflow;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,8 +14,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Logger;
 
+import gr.cslab.asap.rest.beans.OperatorDictionary;
 import gr.cslab.asap.rest.beans.WorkflowDictionary;
+import gr.ntua.cslab.asap.daemon.AbstractOperatorLibrary;
+import gr.ntua.cslab.asap.daemon.DatasetLibrary;
+import gr.ntua.cslab.asap.daemon.OperatorLibrary;
 import gr.ntua.cslab.asap.operators.AbstractOperator;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.MaterializedOperators;
@@ -22,6 +29,7 @@ import gr.ntua.cslab.asap.operators.Operator;
 
 public class AbstractWorkflow1 {
 	private List<WorkflowNode> targets;
+	private HashMap<String,WorkflowNode> workflowNodes;
 	public String name;
 
 	@Override
@@ -32,6 +40,7 @@ public class AbstractWorkflow1 {
 	public AbstractWorkflow1(String name) {
 		this.name=name;
 		targets = new ArrayList<WorkflowNode>();
+		workflowNodes = new HashMap<String, WorkflowNode>();
 	}
 
 	public void addTarget(WorkflowNode target) {
@@ -129,7 +138,7 @@ public class AbstractWorkflow1 {
 				nodes.put(temp.datasetName, n);
 			} 
 		}
-		
+		workflowNodes.putAll(nodes);
 		File edgeGraph = new File(directory+"/graph");
 		FileInputStream fis = new FileInputStream(edgeGraph);
 		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
@@ -149,7 +158,115 @@ public class AbstractWorkflow1 {
 		br.close();
 	}
 	
+	public String graphToString() throws IOException {
+		ByteArrayOutputStream bs = new ByteArrayOutputStream();
+		BufferedWriter graphWritter = new BufferedWriter(new OutputStreamWriter(bs));
+
+		for(WorkflowNode n : workflowNodes.values()){
+			n.graphToString(graphWritter);
+		}
+
+		for(WorkflowNode t : targets){
+			graphWritter.write(t.toStringNorecursive() +",$$target");
+			graphWritter.newLine();
+		}
+		
+		graphWritter.close();
+		return bs.toString("UTF-8");
+	}
+	
+	public String graphToStringRecursive() throws IOException {
+
+		for(WorkflowNode t : targets){
+			t.setAllNotVisited();
+		}
+
+		ByteArrayOutputStream bs = new ByteArrayOutputStream();
+		BufferedWriter graphWritter = new BufferedWriter(new OutputStreamWriter(bs));
+    	
+
+		for(WorkflowNode t : targets){
+			t.graphToStringRecursive(graphWritter);
+			graphWritter.write(t.toStringNorecursive() +",$$target");
+			graphWritter.newLine();
+		}
+		
+		graphWritter.close();
+		return bs.toString("UTF-8");
+	}
+
+
+	public void changeEdges(String workflowGraph) throws IOException {
+
+		for(WorkflowNode n : workflowNodes.values()){
+			n.inputs = new ArrayList<WorkflowNode>();
+		}
+		ByteArrayInputStream fis = new ByteArrayInputStream(workflowGraph.getBytes());
+		BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+	 
+		String line = null;
+		while ((line = br.readLine()) != null) {
+			String[] e =line.split(",");
+			if(e[1].equals("$$target")){
+				this.targets.add(workflowNodes.get(e[0]));
+			}
+			else{
+				WorkflowNode src = workflowNodes.get(e[0]);
+				WorkflowNode dest = workflowNodes.get(e[1]);
+				dest.inputs.add(src);
+			}
+		}
+		br.close();
+	}
+
+	public void addNode(String type, String name) {
+		int t = Integer.parseInt(type);
+		WorkflowNode n =null;
+		switch (t) {
+		case 1:
+			n = new WorkflowNode(true, true);
+			n.setAbstractOperator(AbstractOperatorLibrary.getOperator(name));
+			break;
+		case 2:
+			n = new WorkflowNode(true, false);
+			n.setOperator(OperatorLibrary.getOperator(name));
+			break;
+		case 3:
+			n = new WorkflowNode(false, true);
+			n.setDataset(new Dataset(name));
+			break;
+		case 4:
+			n = new WorkflowNode(false, false);
+			n.setDataset(DatasetLibrary.getDataset(name));
+			
+			break;
+
+		default:
+			n = new WorkflowNode(false, false);
+			break;
+		}
+		
+		workflowNodes.put(name,n);
+		
+	}
+	
+
 	public WorkflowDictionary toWorkflowDictionary() {
+		WorkflowDictionary ret = new WorkflowDictionary();
+    	Random ran = new Random();
+		for(WorkflowNode n : workflowNodes.values()){
+	    	OperatorDictionary op = new OperatorDictionary(n.toStringNorecursive(), ran.nextInt(1000)+"", "running", n.isOperator+"", n.toStringNorecursive()+"\n"+n.toKeyValueString());
+
+			for(WorkflowNode in : n.inputs){
+				op.addInput(in.toStringNorecursive());
+			}
+	    	ret.addOperator(op);
+		}
+		return ret;
+	}
+	
+	
+	public WorkflowDictionary toWorkflowDictionaryRecursive() {
 		for(WorkflowNode t : targets){
 			t.setAllNotVisited();
 		}
