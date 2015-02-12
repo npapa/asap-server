@@ -30,36 +30,6 @@ public class AbstractWorkflows {
 
 	@GET
 	@Produces("application/json")
-    public WorkflowDictionary listOperators() throws IOException {
-
-		MaterializedWorkflow1 mw = new MaterializedWorkflow1();
-		
-		mw.readFromDir("asapLibrary/workflows/latest");
-		WorkflowDictionary ret = mw.toWorkflowDictionary();
-		
-		
-    	/*WorkflowDictionary ret = new WorkflowDictionary();
-    	Random ran = new Random();
-    	OperatorDictionary op = new OperatorDictionary("test", ran.nextInt(1000)+"", "stopped");
-    	OperatorDictionary op1 = new OperatorDictionary("test1", ran.nextInt(1000)+"", "running");
-    	op1.addInput("test");
-    	OperatorDictionary op2 = new OperatorDictionary("test2", ran.nextInt(1000)+"", "stopped");
-    	op2.addInput("test");
-    	OperatorDictionary op3 = new OperatorDictionary("test3", ran.nextInt(1000)+"", "stopped");
-    	op3.addInput("test1");
-    	op3.addInput("test2");
-    	
-
-    	ret.addOperator(op);
-    	ret.addOperator(op1);
-    	ret.addOperator(op2);
-    	ret.addOperator(op3);*/
-    	
-        return ret;
-    }
-
-	@GET
-	@Produces("application/json")
 	@Path("/{id}/")
     public WorkflowDictionary getDescription(@PathParam("id") String id) throws IOException {
         return AbstractWorkflowLibrary.getWorkflow(id);

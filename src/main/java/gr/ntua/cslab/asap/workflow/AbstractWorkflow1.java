@@ -22,13 +22,15 @@ import gr.ntua.cslab.asap.operators.Operator;
 
 public class AbstractWorkflow1 {
 	private List<WorkflowNode> targets;
+	public String name;
 
 	@Override
 	public String toString() {
 		return targets.toString();
 	}
 	
-	public AbstractWorkflow1() {
+	public AbstractWorkflow1(String name) {
+		this.name=name;
 		targets = new ArrayList<WorkflowNode>();
 	}
 
@@ -44,8 +46,8 @@ public class AbstractWorkflow1 {
 		return targets;
 	}
 
-	public MaterializedWorkflow1 materialize() {
-		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1();
+	public MaterializedWorkflow1 materialize(String nameExtention) {
+		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1(name+"_"+nameExtention);
 
 		for(WorkflowNode t : targets){
 			List<WorkflowNode> l = t.materialize(materializedWorkflow);
@@ -114,7 +116,13 @@ public class AbstractWorkflow1 {
 
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isFile()) {
-				WorkflowNode n = new WorkflowNode(false, false);
+				WorkflowNode n =null;
+				if(files[i].getName().startsWith("d")){
+					n = new WorkflowNode(false, true);
+				}
+				else{
+					n = new WorkflowNode(false, false);
+				}
 				Dataset temp = new Dataset(files[i].getName());
 				temp.readPropertiesFromFile(files[i]);
 				n.setDataset(temp);
@@ -158,7 +166,7 @@ public class AbstractWorkflow1 {
 		
 
 		MaterializedOperators library =  new MaterializedOperators();
-		AbstractWorkflow1 abstractWorkflow = new AbstractWorkflow1();
+		AbstractWorkflow1 abstractWorkflow = new AbstractWorkflow1("test");
 		Dataset d1 = new Dataset("hbaseDataset");
 		d1.add("Constraints.DataInfo.Attributes.number","2");
 		d1.add("Constraints.DataInfo.Attributes.Atr1.type","ByteWritable");
@@ -225,7 +233,7 @@ public class AbstractWorkflow1 {
 
 		abstractWorkflow.writeToDir("asapLibrary/abstractWorkflows/DataAnalytics");
 		System.exit(0);
-		MaterializedWorkflow1 mw = abstractWorkflow.materialize();
+		MaterializedWorkflow1 mw = abstractWorkflow.materialize("t");
 		System.out.println(abstractWorkflow);
 		System.out.println(mw);
 		mw.printNodes();

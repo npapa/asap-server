@@ -31,9 +31,7 @@ public class Workflows {
 	@Produces("application/json")
     public WorkflowDictionary listOperators() throws IOException {
 
-		MaterializedWorkflow1 mw = new MaterializedWorkflow1();
-		
-		mw.readFromDir("asapLibrary/workflows/latest");
+		MaterializedWorkflow1 mw = new MaterializedWorkflow1("latest");
 		WorkflowDictionary ret = mw.toWorkflowDictionary();
 		
 		

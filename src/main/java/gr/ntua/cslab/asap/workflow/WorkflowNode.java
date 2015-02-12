@@ -5,7 +5,6 @@ import gr.cslab.asap.rest.beans.WorkflowDictionary;
 import gr.ntua.cslab.asap.daemon.OperatorLibrary;
 import gr.ntua.cslab.asap.operators.AbstractOperator;
 import gr.ntua.cslab.asap.operators.Dataset;
-import gr.ntua.cslab.asap.operators.MaterializedOperators;
 import gr.ntua.cslab.asap.operators.Operator;
 
 import java.io.BufferedWriter;
@@ -15,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.log4j.Logger;
+
 public class WorkflowNode implements Comparable<WorkflowNode>{
 	private boolean visited;
 	public boolean isOperator,isAbstract;
@@ -22,6 +23,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 	public AbstractOperator abstractOperator;
 	public Dataset dataset;
 	public List<WorkflowNode> inputs;
+	private static Logger logger = Logger.getLogger(WorkflowNode.class.getName());
 	
 	public WorkflowNode(boolean isOperator, boolean isAbstract) {
 		this.isOperator = isOperator;
@@ -52,19 +54,19 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 
 
 	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow) {
-		//System.out.println("Processing : "+toStringNorecursive());
+		logger.info("Processing : "+toStringNorecursive());
 		List<WorkflowNode> ret = new ArrayList<WorkflowNode>();
 		List<List<WorkflowNode>> materializedInputs = new ArrayList<List<WorkflowNode>>();
 		for(WorkflowNode in : inputs){
 			List<WorkflowNode> l = in.materialize(materializedWorkflow);
 			materializedInputs.add(l);
 		}
-		//System.out.println(materializedInputs);
+		logger.info(materializedInputs);
 		if(isOperator){
 			if(isAbstract){
 				List<Operator> operators = OperatorLibrary.getMatches(abstractOperator);
 				for(Operator op : operators){
-					//System.out.println("Materialized operator: "+op.opName);
+					logger.info("Materialized operator: "+op.opName);
 					WorkflowNode temp = new WorkflowNode(true, false);
 					temp.setOperator(op);
 					int inputs = Integer.parseInt(op.getParameter("Constraints.Input.number"));
@@ -80,9 +82,9 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 
 						boolean inputMatches=false;
 						for(WorkflowNode in : materializedInputs.get(i)){
-							//System.out.println("Checking: "+in.dataset.datasetName);
+							logger.info("Checking: "+in.dataset.datasetName);
 							if(tempInput.checkMatch(in.dataset)){
-								//System.out.println("true");
+								logger.info("true");
 								inputMatches=true;
 								tempInputNode.addInput(in);
 							}
@@ -111,6 +113,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						//tempInputNode.addInputs(materializedInputs.get(i));
 					}
 					if(inputsMatch){
+						logger.info("all inputs match");
 						WorkflowNode tempOutputNode = new WorkflowNode(false, false);
 						Dataset tempOutput = new Dataset("t"+materializedWorkflow.count);
 						materializedWorkflow.count++;

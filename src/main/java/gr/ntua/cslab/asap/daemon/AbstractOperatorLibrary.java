@@ -14,21 +14,20 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-public class OperatorLibrary {
-	private static HashMap<String,Operator> operators;
+public class AbstractOperatorLibrary {
+	private static HashMap<String,AbstractOperator> operators;
 	private static String operatorDirectory;
-	private static Logger logger = Logger.getLogger(OperatorLibrary.class.getName());
 	
 	public static void initialize(String directory) throws IOException{
 		operatorDirectory = directory;
-		operators = new HashMap<String,Operator>();
+		operators = new HashMap<String,AbstractOperator>();
 		File folder = new File(directory);
 		File[] listOfFiles = folder.listFiles();
 
 		for (int i = 0; i < listOfFiles.length; i++) {
 			if (listOfFiles[i].isFile() && !listOfFiles[i].isHidden()) {
-		        Logger.getLogger(OperatorLibrary.class.getName()).info("Loading operator: " + listOfFiles[i].getName());
-				Operator temp = new Operator(listOfFiles[i].getName());
+		        Logger.getLogger(AbstractOperatorLibrary.class.getName()).info("Loading operator: " + listOfFiles[i].getName());
+		        AbstractOperator temp = new AbstractOperator(listOfFiles[i].getName());
 				temp.readPropertiesFromFile(listOfFiles[i]);
 				operators.put(temp.opName, temp);
 		    }
@@ -41,45 +40,25 @@ public class OperatorLibrary {
 	
 	public static List<String> getOperators(){
 		List<String> ret = new ArrayList<String>();
-		for(Operator op : operators.values()){
+		for(AbstractOperator op : operators.values()){
 			ret.add(op.opName);
 		}
 		return ret;
 	}
 	
-	public static List<Operator> getMatches(AbstractOperator abstractOperator){
-		logger.info("Check matches: "+abstractOperator.opName);
-		List<Operator> ret = new ArrayList<Operator>();
-		for(Operator op : operators.values()){
-			if(abstractOperator.checkMatch(op))
-				ret.add(op);
-		}
-		for(Operator o :ret){
-			logger.info("Found: "+o.opName);
-		}
-		return ret;
-	}
-	
-	public static List<Operator> checkMove(Dataset from, Dataset to) {
-		//logger.info("Check move from: "+from+" to: "+to);
-		AbstractOperator abstractMove = new AbstractOperator("move");
-		abstractMove.moveOperator(from,to);
-		return getMatches(abstractMove);
-	}
-
 	public static String getOperatorDescription(String id) {
-		Operator op = operators.get(id);
+		AbstractOperator op = operators.get(id);
 		if(op==null)
 			return "No description available";
 		return op.toKeyValues("<br>");
 	}
 
-	public static void add(Operator o) {
+	public static void add(AbstractOperator o) {
 		operators.put(o.opName, o);
 	}
 
 	public static void addOperator(String opname, String opString) throws IOException {
-    	Operator o = new Operator(opname);
+		AbstractOperator o = new AbstractOperator(opname);
     	InputStream is = new ByteArrayInputStream(opString.getBytes());
     	o.readPropertiesFromFile(is);
     	o.writeToPropertiesFile("asapLibrary/operators/"+o.opName);
@@ -88,8 +67,12 @@ public class OperatorLibrary {
 	}
 
 	public static void deleteOperator(String opname) {
-		Operator op = operators.remove(opname);
+		AbstractOperator op = operators.remove(opname);
 		File file = new File(operatorDirectory+"/"+op.opName);
 		file.delete();
+	}
+
+	public static AbstractOperator getOperator(String opname) {
+		return operators.get(opname);
 	}
 }

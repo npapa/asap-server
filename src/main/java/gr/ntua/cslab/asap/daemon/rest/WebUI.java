@@ -1,10 +1,12 @@
 package gr.ntua.cslab.asap.daemon.rest;
 
+import gr.ntua.cslab.asap.daemon.AbstractOperatorLibrary;
 import gr.ntua.cslab.asap.daemon.AbstractWorkflowLibrary;
 import gr.ntua.cslab.asap.daemon.Main;
 import gr.ntua.cslab.asap.daemon.MaterializedWorkflowLibrary;
 import gr.ntua.cslab.asap.daemon.OperatorLibrary;
 import gr.ntua.cslab.asap.operators.Operator;
+import gr.ntua.cslab.asap.workflow.AbstractWorkflow1;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -33,6 +35,7 @@ public class WebUI {
     private static String header=readFile("header.html");
     private static String footer=readFile("footer.html");
     private static String workflowUp=readFile("workflowUp.html").trim();
+    private static String abstractWorkflowUp=readFile("abstractWorkflowUp.html").trim();
     private static String workflowLow=readFile("workflowLow.html");
     
     @GET
@@ -47,6 +50,121 @@ public class WebUI {
  
     @GET
     @Produces(MediaType.TEXT_HTML)
+    @Path("/abstractOperators/")
+    public String listAbstractOperators() throws IOException {
+    	String ret = header;
+    	List<String> l = AbstractOperatorLibrary.getOperators();
+    	ret += "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"/web/abstractOperators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><h2>Add operator:</h2>"
+    		+ "<form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
+			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+    	
+    	ret += footer;
+        return ret;
+    }
+    
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/abstractOperators/{id}/")
+    public String abstractOperatorDescription(@PathParam("id") String id) throws IOException {
+    	String ret = header;
+    	ret+= "<h1>"+id+"</h1>";
+    	ret += "<p>"+AbstractOperatorLibrary.getOperatorDescription(id)+"</p>";
+
+    	ret+="<div><form action=\"/web/abstractOperators/checkMatches\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+			+ "<input type=\"submit\" value=\"Check matches\"><form></div>";
+
+    	ret+="<div><form action=\"/web/abstractOperators/deleteOperator\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+			+ "<input type=\"submit\" value=\"Delete operator\"><form></div>";
+    	
+    	ret += footer;
+        return ret;
+    }
+
+
+    @GET
+    @Path("/abstractOperators/checkMatches/")
+    @Produces(MediaType.TEXT_HTML)
+    public String checkAbstractOperatorMatches(
+            @QueryParam("opname") String opname) throws IOException {
+    	String ret = header;
+    	List<Operator> l = OperatorLibrary.getMatches(AbstractOperatorLibrary.getOperator(opname));
+    	ret += "<ul>";
+    	for(Operator op : l){
+			ret+= "<li><a href=\"/web/operators/"+op.opName+"\">"+op.opName+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+    	ret += footer;
+    	return ret;
+    }
+    
+    @GET
+    @Path("/abstractOperators/deleteOperator/")
+    @Produces(MediaType.TEXT_HTML)
+    public String deleteAbstractOperator(
+            @QueryParam("opname") String opname) throws IOException {
+    	String ret = header;
+    	AbstractOperatorLibrary.deleteOperator(opname);
+    	List<String> l = AbstractOperatorLibrary.getOperators();
+    	ret += "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"/web/abstractOperators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
+			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+    	
+    	ret += footer;
+    	return ret;
+    }
+    
+
+
+    @GET
+    @Path("/abstractOperators/addOperator/")
+    @Produces(MediaType.TEXT_HTML)
+    public String addAbstractOperator(
+            @QueryParam("opname") String opname,
+            @QueryParam("opString") String opString) throws IOException {
+    	String ret = header;
+    	AbstractOperatorLibrary.addOperator(opname, opString);
+    	List<String> l = AbstractOperatorLibrary.getOperators();
+    	ret += "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"/web/abstractOperators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
+			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+    	
+    	ret += footer;
+    	return ret;
+    }
+    
+    
+    
+    @GET
+    @Produces(MediaType.TEXT_HTML)
     @Path("/operators/")
     public String listOperators() throws IOException {
     	String ret = header;
@@ -58,9 +176,10 @@ public class WebUI {
     	}
     	ret+="</ul>";
 
-    	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
+    	ret+="<div><h2>Add operator:</h2>"
+    		+ "<form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
-			+ "<textarea rows=\"4\" cols=\"50\" name=\"opString\"></textarea>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
 			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
@@ -75,10 +194,38 @@ public class WebUI {
     	String ret = header;
     	ret+= "<h1>"+id+"</h1>";
     	ret += "<p>"+OperatorLibrary.getOperatorDescription(id)+"</p>";
+
+    	ret+="<div><form action=\"/web/operators/deleteOperator\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+			+ "<input type=\"submit\" value=\"Delete operator\"><form></div>";
+    	
     	ret += footer;
         return ret;
     }
-    
+
+    @GET
+    @Path("/operators/deleteOperator/")
+    @Produces(MediaType.TEXT_HTML)
+    public String deleteOperator(
+            @QueryParam("opname") String opname) throws IOException {
+    	String ret = header;
+    	OperatorLibrary.deleteOperator(opname);
+    	List<String> l = OperatorLibrary.getOperators();
+    	ret += "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"/web/operators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
+			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
+    	
+    	ret += footer;
+    	return ret;
+    }
 
     @GET
     @Path("/operators/addOperator/")
@@ -98,7 +245,7 @@ public class WebUI {
 
     	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
 			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
-			+ "<textarea rows=\"4\" cols=\"50\" name=\"opString\"></textarea>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
 			+ "<br><input type=\"submit\" value=\"Add operator\"><form></div>";
     	
     	ret += footer;
@@ -133,15 +280,7 @@ public class WebUI {
     }
 
 
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    @Path("/abstractWorkflows/{id}/")
-    public String abstractWorkflowDescription(@PathParam("id") String id) throws IOException {
-    	String ret = header+workflowUp+"/abstractWorkflows/"+id+workflowLow;
-    	ret += footer;
-        return ret;
-    }
-
+    
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Path("/abstractWorkflows/")
@@ -155,9 +294,38 @@ public class WebUI {
     		
     	}
     	ret+="</ul>\n";
+    	
     	ret += footer;
         return ret;
     }
+    
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/abstractWorkflows/{id}/")
+    public String abstractWorkflowDescription(@PathParam("id") String id) throws IOException {
+    	String ret = header+abstractWorkflowUp+"/abstractWorkflows/"+id+workflowLow;
+    	ret+="</div>";
+    	
+    	ret+="<div><form action=\"/web/abstractWorkflows/materialize\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+id+"\">"
+			+ "<input type=\"submit\" value=\"Materialize Workflow\"><form>";
+    	
+    	ret += footer;
+        return ret;
+    }
+    
+
+    @GET
+    @Path("/abstractWorkflows/materialize/")
+    @Produces(MediaType.TEXT_HTML)
+    public String materializeAbstractWorkflow(
+            @QueryParam("workflowName") String workflowName) throws IOException {
+    	String ret = header+workflowUp+"/workflows/"+AbstractWorkflowLibrary.getMaterializedWorkflow(workflowName)+workflowLow;
+    	ret += footer;
+    	return ret;
+    }
+    
+
 
 
     

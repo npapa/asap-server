@@ -86,6 +86,15 @@ public class AbstractOperator implements Comparable<AbstractOperator> {
 		}
 		stream.close();
 	}
+
+	public void readPropertiesFromFile(InputStream stream) throws IOException{
+		Properties props = new Properties();
+		props.load(stream);
+		for(Entry<Object, Object> e : props.entrySet()){
+			add((String)e.getKey(), (String)e.getValue());
+		}
+		stream.close();
+	}
 	
 	
 }

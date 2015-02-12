@@ -148,6 +148,10 @@ public class Main {
         if (!asapDir.exists()) {
         	asapDir.mkdir();
         }
+        File abstractOpDir = new File(folder+"/abstractOperators");
+        if (!abstractOpDir.exists()) {
+        	abstractOpDir.mkdir();
+        }
         File opDir = new File(folder+"/operators");
         if (!opDir.exists()) {
         	opDir.mkdir();
@@ -165,6 +169,7 @@ public class Main {
     }
 
 	private static void load() throws IOException {
+		AbstractOperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractOperators");
 		OperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/operators");
 		AbstractWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractWorkflows");
 		MaterializedWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/workflows");

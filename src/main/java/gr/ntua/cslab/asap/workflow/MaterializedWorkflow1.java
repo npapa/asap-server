@@ -22,13 +22,15 @@ public class MaterializedWorkflow1 {
 	private List<WorkflowNode> targets;
 	public double optimalCost;
 	public int count;
+	public String name;
 	
 	@Override
 	public String toString() {
 		return targets.toString();
 	}
 	
-	public MaterializedWorkflow1() {
+	public MaterializedWorkflow1(String name) {
+		this.name = name;
 		targets = new ArrayList<WorkflowNode>();
 		optimalCost=0.0;
 		count=0;
@@ -64,7 +66,7 @@ public class MaterializedWorkflow1 {
 	
 
 	public void writeToDir(String directory) throws IOException {
-
+		directory+="/"+name;
 		for(WorkflowNode t : targets){
 			t.setAllNotVisited();
 		}
@@ -191,7 +193,7 @@ public class MaterializedWorkflow1 {
 		System.out.println(mw);
 		mw.printNodes();
 		*/
-		MaterializedWorkflow1 mw = new MaterializedWorkflow1();
+		MaterializedWorkflow1 mw = new MaterializedWorkflow1("sd");
 		
 		mw.readFromDir("asapLibrary/workflows/latest");
 		System.out.println(mw);
