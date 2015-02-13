@@ -23,6 +23,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.ws.WebServiceException;
 
+import net.sourceforge.jeval.EvaluationException;
+
 import org.apache.log4j.Logger;
 
 @Path("/abstractWorkflows/")
@@ -31,7 +33,7 @@ public class AbstractWorkflows {
 	@GET
 	@Produces("application/json")
 	@Path("/{id}/")
-    public WorkflowDictionary getDescription(@PathParam("id") String id) throws IOException {
+    public WorkflowDictionary getDescription(@PathParam("id") String id) throws IOException, NumberFormatException, EvaluationException {
         return AbstractWorkflowLibrary.getWorkflow(id);
     }
 }

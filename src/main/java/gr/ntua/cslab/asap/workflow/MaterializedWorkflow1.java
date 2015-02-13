@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 
+import net.sourceforge.jeval.EvaluationException;
+
 import org.apache.log4j.Logger;
 
 public class MaterializedWorkflow1 {
@@ -65,7 +67,7 @@ public class MaterializedWorkflow1 {
 		}
 	}
 	
-	public WorkflowDictionary toWorkflowDictionary() {
+	public WorkflowDictionary toWorkflowDictionary() throws NumberFormatException, EvaluationException {
 		for(WorkflowNode t : targets){
 			t.setAllNotVisited();
 		}

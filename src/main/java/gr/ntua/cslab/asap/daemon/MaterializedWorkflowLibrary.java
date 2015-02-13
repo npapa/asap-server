@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import net.sourceforge.jeval.EvaluationException;
+
 import org.apache.log4j.Logger;
 
 public class MaterializedWorkflowLibrary {
@@ -33,7 +35,7 @@ public class MaterializedWorkflowLibrary {
 		}
 	}
 	
-	public static WorkflowDictionary getWorkflow(String name){
+	public static WorkflowDictionary getWorkflow(String name) throws NumberFormatException, EvaluationException{
 		return materializedWorkflows.get(name).toWorkflowDictionary();
 	}
 

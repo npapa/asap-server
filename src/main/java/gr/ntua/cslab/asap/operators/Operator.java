@@ -2,6 +2,10 @@ package gr.ntua.cslab.asap.operators;
 
 import gr.ntua.cslab.asap.daemon.Main;
 import gr.ntua.cslab.asap.daemon.ServerStaticComponents;
+import gr.ntua.cslab.asap.workflow.AbstractWorkflow1;
+import gr.ntua.cslab.asap.workflow.WorkflowNode;
+import net.sourceforge.jeval.EvaluationException;
+import net.sourceforge.jeval.Evaluator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,13 +14,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
+
+import com.sun.xml.internal.bind.v2.runtime.Name;
 
 public class Operator {
 	public SpecTree optree;
 	public String opName;
+	private static Logger logger = Logger.getLogger(Operator.class.getName());
 	
 	public Operator(String name) {
 		optree = new SpecTree();
@@ -88,6 +98,8 @@ public class Operator {
 	
 
 	public static void main(String[] args) throws IOException {
+		
+		
 		Operator op = new Operator("HBase_HashJoin");
 		op.readPropertiesFromFile("/home/nikos/test1");
 		System.out.println(op.toKeyValues("\n"));
@@ -168,14 +180,67 @@ public class Operator {
 		System.out.println("Time (s): "+((double)(stop-start))/1000.0);
 	}
 
-	public Double getCost() {
+
+	public Double getCost(List<WorkflowNode> inputs) throws NumberFormatException, EvaluationException {
+
+		logger.info("Compute cost Operator "+opName);
+		logger.info("inputs: "+inputs);
+		String value = getParameter("Optimization.execTime");
+		logger.info("value "+value);
+		Evaluator evaluator = new Evaluator();
+		if(value.contains("$")){
+			int offset=1;
+			if(value.startsWith("\\$"))
+				offset=0;
+			String[] variables = value.split("\\$");
+			List<String> vars = new ArrayList<String>();
+			for (int i = 0; i < variables.length; i+=1) {
+				logger.info("split "+variables[i]);
+			}
+			for (int i = offset; i < variables.length; i+=2) {
+				vars.add(variables[i]);
+			}
+			logger.info("Variables: "+vars);
+			
+			for(String var : vars){
+				String[] s = var.split("\\.");
+				for (int i = 0; i < s.length; i+=1) {
+					logger.info("split "+s[i]);
+				}
+				
+				int inNum = Integer.parseInt(s[0]);
+				WorkflowNode n = inputs.get(inNum);
+				String val = null;
+				if(n.isOperator)
+					val=n.inputs.get(0).dataset.getParameter("Optimization."+s[1]);
+				else
+					val = n.dataset.getParameter("Optimization."+s[1]);
+				if(val==null){
+					val ="10.0";
+				}
+				logger.info("Replace: "+"$"+var+"$  "+ val);
+				value=value.replace("$"+var+"$", val);
+			}
+			logger.info("Evaluate value "+value);
+
+			logger.info("Cost: "+evaluator.evaluate(value));
+			return Double.parseDouble(evaluator.evaluate(value));
+		}
+		else{
+			logger.info("Cost: "+evaluator.evaluate(value));
+			return Double.parseDouble(evaluator.evaluate(value));
+		}
+	}
+	
+	/*public Double getCost() {
 		String value = getParameter("Optimization.execTime");
 		return Double.parseDouble(value);
-	}
+	}*/
 
 	public String getParameter(String key) {
 		return optree.getParameter(key);
 	}
+
 
 
 }

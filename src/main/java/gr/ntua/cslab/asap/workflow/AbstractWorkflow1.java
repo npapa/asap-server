@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import net.sourceforge.jeval.EvaluationException;
+import net.sourceforge.jeval.Evaluator;
 import gr.cslab.asap.rest.beans.OperatorDictionary;
 import gr.cslab.asap.rest.beans.WorkflowDictionary;
 import gr.ntua.cslab.asap.daemon.AbstractOperatorLibrary;
@@ -29,6 +31,7 @@ import gr.ntua.cslab.asap.operators.Operator;
 
 public class AbstractWorkflow1 {
 	private List<WorkflowNode> targets;
+	private List<WorkflowNode> abstractInputs;
 	private HashMap<String,WorkflowNode> workflowNodes;
 	public String name;
 	private static Logger logger = Logger.getLogger(AbstractWorkflow1.class.getName());
@@ -56,7 +59,7 @@ public class AbstractWorkflow1 {
 		return targets;
 	}
 
-	public MaterializedWorkflow1 materialize(String nameExtention) {
+	public MaterializedWorkflow1 materialize(String nameExtention) throws NumberFormatException, EvaluationException {
 		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1(name+"_"+nameExtention);
 
 		Workflow1DPTable dpTable = new Workflow1DPTable();
@@ -76,6 +79,7 @@ public class AbstractWorkflow1 {
 					bestPlan=dpTable.getPlan(r.dataset);
 				}
 			}
+			bestPlan.add(t);
 			materializedWorkflow.setBestPlan(t.toStringNorecursive(), bestPlan);
 			logger.info("Optimal cost: "+minCost);
 			materializedWorkflow.optimalCost=minCost;
@@ -265,10 +269,10 @@ public class AbstractWorkflow1 {
 	}
 	
 
-	public WorkflowDictionary toWorkflowDictionary() {
+	public WorkflowDictionary toWorkflowDictionary() throws NumberFormatException, EvaluationException {
 		WorkflowDictionary ret = new WorkflowDictionary();
 		for(WorkflowNode n : workflowNodes.values()){
-	    	OperatorDictionary op = new OperatorDictionary(n.toStringNorecursive(), n.getCost(), n.getStatus(new HashMap<String, List<WorkflowNode>>()), n.isOperator+"", n.toStringNorecursive()+"\n"+n.toKeyValueString());
+	    	OperatorDictionary op = new OperatorDictionary(n.toStringNorecursive(), n.getCost()+"", n.getStatus(new HashMap<String, List<WorkflowNode>>()), n.isOperator+"", n.toStringNorecursive()+"\n"+n.toKeyValueString());
 
 			for(WorkflowNode in : n.inputs){
 				op.addInput(in.toStringNorecursive());
@@ -279,7 +283,7 @@ public class AbstractWorkflow1 {
 	}
 	
 	
-	public WorkflowDictionary toWorkflowDictionaryRecursive() {
+	public WorkflowDictionary toWorkflowDictionaryRecursive() throws NumberFormatException, EvaluationException {
 		for(WorkflowNode t : targets){
 			t.setAllNotVisited();
 		}
@@ -291,8 +295,41 @@ public class AbstractWorkflow1 {
 	}
 	
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, NumberFormatException, EvaluationException {
+
+
+		Evaluator evaluator = new Evaluator();
+
+		try {
+
+			/**
+			 * This sample shows a basic math function.
+			 */
+			System.out.println(evaluator.evaluate("abs(-1)"));
+
+			/**
+			 * This sample shows a math function used in a more complex
+			 * mathematical expression.
+			 */
+			System.out.println(evaluator.evaluate("pow(3,3) "));
+
+			/**
+			 * This sample shows another math function.
+			 */
+			System.out.println(evaluator.evaluate("acos(0.1)"));
+
+			/**
+			 * This sample shows an invalid expression. The "round" function
+			 * requires an argument.
+			 */
+			System.out.println("An exception is expected in the "
+					+ "next evaluation.");
+			System.out.println(evaluator.evaluate("round(3.7)"));
+		} catch (EvaluationException ee) {
+			System.out.println(ee);
+		}
 		
+		System.exit(0);
 
 		MaterializedOperators library =  new MaterializedOperators();
 		AbstractWorkflow1 abstractWorkflow = new AbstractWorkflow1("test");

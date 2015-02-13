@@ -14,6 +14,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import net.sourceforge.jeval.EvaluationException;
+
 import org.apache.log4j.Logger;
 
 public class AbstractWorkflowLibrary {
@@ -36,7 +38,7 @@ public class AbstractWorkflowLibrary {
 		}
 	}
 	
-	public static WorkflowDictionary getWorkflow(String name){
+	public static WorkflowDictionary getWorkflow(String name) throws NumberFormatException, EvaluationException{
 		return abstractWorkflows.get(name).toWorkflowDictionary();
 	}
 
@@ -44,7 +46,7 @@ public class AbstractWorkflowLibrary {
 		return new ArrayList<String>(abstractWorkflows.keySet());
 	}
 
-	public static String getMaterializedWorkflow(String workflowName) throws IOException {
+	public static String getMaterializedWorkflow(String workflowName) throws IOException, NumberFormatException, EvaluationException {
 		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
 		DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss");
 		Date date = new Date();

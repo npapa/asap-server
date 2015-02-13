@@ -1,7 +1,7 @@
 #
 #Fri Feb 13 14:03:43 EET 2015
 Constraints.DataInfo.Attributes.Atr2.type=Varchar
-Optimization.uniqueKeys=1 million
+Optimization.uniqueKeys=1
 Constraints.DataInfo.Attributes.Atr1.type=Varchar
 Optimization.size=1GB
 Constraints.Engine.DB.Relational.MySQL.schema=...

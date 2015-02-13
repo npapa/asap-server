@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import net.sourceforge.jeval.EvaluationException;
+
 public class AbstractWorkflow {
 	public HashMap<Dataset,List<AbstractOperator>> datasetDag, reverseDatasetDag;
 	public HashMap<AbstractOperator,List<Dataset>> operatorDag, reverseOperatorDag;
@@ -125,7 +127,7 @@ public class AbstractWorkflow {
 	}
 	
 	
-	public void optimize(Dataset target, WorkflowDPTable dpTable) {
+	public void optimize(Dataset target, WorkflowDPTable dpTable) throws NumberFormatException, EvaluationException {
 		if(dpTable.getCost(target)!=null){
 			return;
 		}
@@ -208,7 +210,7 @@ public class AbstractWorkflow {
 						maxCost=Double.MAX_VALUE;
 					}
 					else{
-						maxCost+=op.getCost();
+						maxCost+=op.getCost(new ArrayList<WorkflowNode>());
 						Dataset tempOutput = new Dataset("t"+count);
 						count++;
 						tempOutput.outputFor(op,0);
@@ -237,7 +239,7 @@ public class AbstractWorkflow {
 		
 	}
 	
-	public Workflow optimizeWorkflow(Dataset target) {
+	public Workflow optimizeWorkflow(Dataset target) throws NumberFormatException, EvaluationException {
 		Workflow ret = new Workflow();
 		count =0;
 		WorkflowDPTable dpTable = new WorkflowDPTable();
@@ -311,7 +313,7 @@ public class AbstractWorkflow {
         
 	}
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, NumberFormatException, EvaluationException {
 		MaterializedOperators library =  new MaterializedOperators();
 		AbstractWorkflow abstractWorkflow = new AbstractWorkflow(library);
 		Dataset d1 = new Dataset("hbaseDataset");

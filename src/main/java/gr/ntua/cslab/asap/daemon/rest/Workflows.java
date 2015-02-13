@@ -22,6 +22,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.ws.WebServiceException;
 
+import net.sourceforge.jeval.EvaluationException;
+
 import org.apache.log4j.Logger;
 
 @Path("/workflows/")
@@ -29,7 +31,7 @@ public class Workflows {
 
 	@GET
 	@Produces("application/json")
-    public WorkflowDictionary listOperators() throws IOException {
+    public WorkflowDictionary listOperators() throws IOException, NumberFormatException, EvaluationException {
 
 		MaterializedWorkflow1 mw = new MaterializedWorkflow1("latest");
 		WorkflowDictionary ret = mw.toWorkflowDictionary();
@@ -58,7 +60,7 @@ public class Workflows {
 	@GET
 	@Produces("application/json")
 	@Path("/{id}/")
-    public WorkflowDictionary getDescription(@PathParam("id") String id) throws IOException {
+    public WorkflowDictionary getDescription(@PathParam("id") String id) throws IOException, NumberFormatException, EvaluationException {
         return MaterializedWorkflowLibrary.getWorkflow(id);
     }
 }

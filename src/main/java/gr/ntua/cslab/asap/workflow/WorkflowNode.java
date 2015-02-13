@@ -15,10 +15,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import net.sourceforge.jeval.EvaluationException;
+import net.sourceforge.jeval.Evaluator;
+
 import org.apache.log4j.Logger;
 
 public class WorkflowNode implements Comparable<WorkflowNode>{
 	private boolean visited;
+	private Double optimalCost;
 	public boolean isOperator,isAbstract;
 	public Operator operator;
 	public AbstractOperator abstractOperator;
@@ -31,6 +35,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		this.isAbstract = isAbstract;
 		inputs = new ArrayList<WorkflowNode>();
 		visited=false;
+		optimalCost=0.0;
 	} 
 	
 	public void setOperator(Operator operator){
@@ -54,7 +59,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 	}
 
 
-	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow, Workflow1DPTable dpTable) {
+	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow, Workflow1DPTable dpTable) throws NumberFormatException, EvaluationException {
 		logger.info("Processing : "+toStringNorecursive());
 		List<WorkflowNode> ret = new ArrayList<WorkflowNode>();
 		List<List<WorkflowNode>> materializedInputs = new ArrayList<List<WorkflowNode>>();
@@ -74,6 +79,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 					temp.setOperator(op);
 					int inputs = Integer.parseInt(op.getParameter("Constraints.Input.number"));
 					boolean inputsMatch=true;
+					List<WorkflowNode> bestInputs = new ArrayList<WorkflowNode>();
 					for (int i = 0; i < inputs; i++) {
 						Dataset tempInput = new Dataset("t"+materializedWorkflow.count);
 						materializedWorkflow.count++;
@@ -86,7 +92,6 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						boolean inputMatches=false;
 						Double operatorOneInputCost= Double.MAX_VALUE;
 						WorkflowNode bestInput = null;
-						
 						for(WorkflowNode in : materializedInputs.get(i)){
 							logger.info("Checking: "+in.dataset.datasetName);
 							if(tempInput.checkMatch(in.dataset)){
@@ -110,7 +115,8 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 										moveNode.setOperator(m);
 										moveNode.addInput(in);
 										tempInputNode.addInput(moveNode);
-										Double tempCost = dpTable.getCost(in.dataset)+m.getCost();
+										moveNode.setOptimalCost(m.getCost(moveNode.inputs));
+										Double tempCost = dpTable.getCost(in.dataset)+moveNode.getCost();
 										if(tempCost<operatorOneInputCost){
 											operatorOneInputCost=tempCost;
 											bestInput=moveNode;
@@ -132,6 +138,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						if(operatorOneInputCost>operatorInputCost){
 							operatorInputCost=operatorOneInputCost;
 						}
+						bestInputs.add(bestInput);
 						if(bestInput.isOperator){
 							//move
 							plan.addAll(dpTable.getPlan(bestInput.inputs.get(0).dataset));
@@ -140,6 +147,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						else{
 							plan.addAll(dpTable.getPlan(bestInput.dataset));
 						}
+						plan.add(tempInputNode);
 					}
 					if(inputsMatch){
 						logger.info("all inputs match");
@@ -151,8 +159,10 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						tempOutputNode.addInput(temp);
 						ret.add(tempOutputNode);
 						
+						temp.setOptimalCost(op.getCost(bestInputs));
 						plan.add(temp);
-						dpTable.addRecord(tempOutput, plan, operatorInputCost+op.getCost());
+						plan.add(tempOutputNode);
+						dpTable.addRecord(tempOutput, plan, operatorInputCost+temp.getCost());
 					}
 				}
 			}
@@ -222,9 +232,8 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 		return ret;
 	}
-	
-	@Override
-	public String toString() {
+
+	public String toStringRecursive() {
 		String ret = "";
 		if(isOperator){
 			if(isAbstract)
@@ -248,6 +257,32 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 		return ret;
 	}
+	
+	@Override
+	public String toString() {
+		String ret = "";
+		if(isOperator){
+			if(isAbstract)
+				ret+=abstractOperator.opName;
+			else
+				ret+=operator.opName;
+		}
+		else{
+			ret+=dataset.datasetName;
+		}
+		/*if(inputs.size()>0){
+			ret+=" { ";
+			int i=0;
+			for(WorkflowNode n : inputs){
+				if(i!=0)
+					ret+=", ";
+				ret+=n.toString();
+				i++;
+			}
+			ret+=" }";
+		}*/
+		return ret;
+	}
 
 	public void printNodes() {
 		if(!visited){
@@ -261,14 +296,17 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 	}
 
-	public String getCost(){
+	public Double getCost() throws NumberFormatException, EvaluationException{
 		if(isOperator && !isAbstract){
-    		return operator.getParameter("Optimization.execTime");
+    		return optimalCost;
 		}
 		else{
-    		return "";
+    		return 0.0;
 		}
-		
+	}
+	
+	public void setOptimalCost(Double optimalCost) {
+		this.optimalCost = optimalCost;
 	}
 	
 	public String getStatus(HashMap<String, List<WorkflowNode>> bestPlans){
@@ -294,9 +332,9 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 	}
 	
-	public void toWorkflowDictionary(WorkflowDictionary ret, HashMap<String, List<WorkflowNode>> bestPlans) {
+	public void toWorkflowDictionary(WorkflowDictionary ret, HashMap<String, List<WorkflowNode>> bestPlans) throws NumberFormatException, EvaluationException {
 		if(!visited){
-			OperatorDictionary op= new OperatorDictionary(toStringNorecursive(), getCost(), getStatus(bestPlans), isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
+			OperatorDictionary op= new OperatorDictionary(toStringNorecursive(), getCost()+"", getStatus(bestPlans), isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
 			
 			for(WorkflowNode n : inputs){
 				op.addInput(n.toStringNorecursive());

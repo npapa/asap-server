@@ -26,6 +26,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import net.sourceforge.jeval.EvaluationException;
+
 import org.apache.log4j.Logger;
 
 
@@ -558,7 +560,7 @@ public class WebUI {
     @Path("/abstractWorkflows/materialize/")
     @Produces(MediaType.TEXT_HTML)
     public String materializeAbstractWorkflow(
-            @QueryParam("workflowName") String workflowName) throws IOException {
+            @QueryParam("workflowName") String workflowName) throws IOException, NumberFormatException, EvaluationException {
     	String ret = header+workflowUp+"/workflows/"+AbstractWorkflowLibrary.getMaterializedWorkflow(workflowName)+workflowLow;
     	ret += footer;
     	return ret;

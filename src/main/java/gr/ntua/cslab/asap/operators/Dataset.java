@@ -105,4 +105,8 @@ public class Dataset implements Comparable<Dataset> {
 		return ret;
 	}
 
+	public String getParameter(String key) {
+		return datasetTree.getParameter(key);
+	}
+
 }

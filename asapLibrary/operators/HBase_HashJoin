@@ -16,7 +16,7 @@ Constraints.Output0.DataInfo.Attributes.number=2
 Constraints.EngineSpecification.Distributed.MapReduce.masterLocation=127.0.0.1
 Constraints.Output.number=1
 Constraints.Input0.DataInfo.Attributes.number=2
-Optimization.execTime=100.0
+Optimization.execTime=100.0 + ($0.uniqueKeys$ + $1.uniqueKeys$)/10.0
 Constraints.Input.number=2
 Constraints.Input1.DataInfo.Attributes.Atr1.type=ByteWritable
 Constraints.OpSpecification.Algorithm.Join.JoinCondition=in1.atr1 \= in2.atr2
