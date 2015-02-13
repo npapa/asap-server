@@ -226,11 +226,19 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 	}
 
-
+	public String getCost(){
+		if(isOperator && !isAbstract){
+    		return operator.getParameter("Optimization.execTime");
+		}
+		else{
+    		return "";
+		}
+		
+	}
 	public void toWorkflowDictionary(WorkflowDictionary ret, Random ran) {
 		if(!visited){
-	    	OperatorDictionary op = new OperatorDictionary(toStringNorecursive(), ran.nextInt(1000)+"", "running", isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
-
+			OperatorDictionary op= new OperatorDictionary(toStringNorecursive(), getCost(), "running", isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
+			
 			for(WorkflowNode n : inputs){
 				op.addInput(n.toStringNorecursive());
 				n.toWorkflowDictionary(ret, ran);

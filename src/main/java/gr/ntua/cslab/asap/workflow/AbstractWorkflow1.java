@@ -255,7 +255,7 @@ public class AbstractWorkflow1 {
 		WorkflowDictionary ret = new WorkflowDictionary();
     	Random ran = new Random();
 		for(WorkflowNode n : workflowNodes.values()){
-	    	OperatorDictionary op = new OperatorDictionary(n.toStringNorecursive(), ran.nextInt(1000)+"", "running", n.isOperator+"", n.toStringNorecursive()+"\n"+n.toKeyValueString());
+	    	OperatorDictionary op = new OperatorDictionary(n.toStringNorecursive(), n.getCost(), "running", n.isOperator+"", n.toStringNorecursive()+"\n"+n.toKeyValueString());
 
 			for(WorkflowNode in : n.inputs){
 				op.addInput(in.toStringNorecursive());

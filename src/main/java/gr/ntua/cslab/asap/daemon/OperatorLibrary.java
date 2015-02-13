@@ -71,7 +71,7 @@ public class OperatorLibrary {
 		Operator op = operators.get(id);
 		if(op==null)
 			return "No description available";
-		return op.toKeyValues("<br>");
+		return op.toKeyValues("\n");
 	}
 
 	public static void add(Operator o) {

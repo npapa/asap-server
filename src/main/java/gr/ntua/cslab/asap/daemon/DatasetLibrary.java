@@ -51,7 +51,7 @@ public class DatasetLibrary {
 		Dataset d = datasets.get(id);
 		if(d==null)
 			return "No description available";
-		return d.toKeyValues("<br>");
+		return d.toKeyValues("\n");
 	}
 
 	public static void add(Dataset d) {

@@ -79,15 +79,19 @@ public class WebUI {
     public String abstractOperatorDescription(@PathParam("id") String id) throws IOException {
     	String ret = header;
     	ret+= "<h1>"+id+"</h1>";
-    	ret += "<p>"+AbstractOperatorLibrary.getOperatorDescription(id)+"</p>";
-
-    	ret+="<div><p><form action=\"/web/abstractOperators/checkMatches\" method=\"get\">"
+    	ret += "<form action=\"/web/abstractOperators/editOperator\" method=\"get\">"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\">"+AbstractOperatorLibrary.getOperatorDescription(id)+"</textarea>"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Check matches\"></form></p>";
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Edit operator\"></form><br>";
+    	//ret += "<p>"+AbstractOperatorLibrary.getOperatorDescription(id)+"</p>";
 
-    	ret+="<p><form action=\"/web/abstractOperators/deleteOperator\" method=\"get\">"
+    	ret+="<form action=\"/web/abstractOperators/checkMatches\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form></p></div>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Check matches\"></form><br>";
+
+    	ret+="<form action=\"/web/abstractOperators/deleteOperator\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form></div>";
     	
     	ret += footer;
         return ret;
@@ -107,6 +111,30 @@ public class WebUI {
     		
     	}
     	ret+="</ul>";
+    	ret += footer;
+    	return ret;
+    }
+
+    @GET
+    @Path("/abstractOperators/editOperator/")
+    @Produces(MediaType.TEXT_HTML)
+    public String editAbstractOperator(@QueryParam("opname") String opname,@QueryParam("opString") String opString) throws IOException {
+    	String ret = header;
+    	AbstractOperatorLibrary.deleteOperator(opname);
+    	AbstractOperatorLibrary.addOperator(opname, opString);
+    	List<String> l = AbstractOperatorLibrary.getOperators();
+    	ret += "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"/web/abstractOperators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/abstractOperators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
+    	
     	ret += footer;
     	return ret;
     }
@@ -194,14 +222,42 @@ public class WebUI {
     public String operatorDescription(@PathParam("id") String id) throws IOException {
     	String ret = header;
     	ret+= "<h1>"+id+"</h1>";
-    	ret += "<p>"+OperatorLibrary.getOperatorDescription(id)+"</p>";
+    	ret += "<form action=\"/web/operators/editOperator\" method=\"get\">"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\">"+OperatorLibrary.getOperatorDescription(id)+"</textarea>"
+			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Edit operator\"></form><br>";
+    	//ret += "<p>"+OperatorLibrary.getOperatorDescription(id)+"</p>";
 
-    	ret+="<div><form action=\"/web/operators/deleteOperator\" method=\"get\">"
+    	ret+="<form action=\"/web/operators/deleteOperator\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
 			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form></div>";
     	
     	ret += footer;
         return ret;
+    }
+
+    @GET
+    @Path("/operators/editOperator/")
+    @Produces(MediaType.TEXT_HTML)
+    public String editOperator(@QueryParam("opname") String opname,@QueryParam("opString") String opString) throws IOException {
+    	String ret = header;
+    	OperatorLibrary.deleteOperator(opname);
+    	OperatorLibrary.addOperator(opname, opString);
+    	List<String> l = OperatorLibrary.getOperators();
+    	ret += "<ul>";
+    	for(String op : l){
+			ret+= "<li><a href=\"/web/operators/"+op+"\">"+op+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/operators/addOperator\" method=\"get\">"
+			+ "Operator name: <input type=\"text\" name=\"opname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\"></textarea>"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add operator\"></form></div>";
+    	
+    	ret += footer;
+    	return ret;
     }
 
     @GET
@@ -285,14 +341,41 @@ public class WebUI {
     public String datasetDescription(@PathParam("id") String id) throws IOException {
     	String ret = header;
     	ret+= "<h1>"+id+"</h1>";
-    	ret += "<p>"+DatasetLibrary.getDatasetDescription(id)+"</p>";
+    	ret += "<form action=\"/web/datasets/editDataset\" method=\"get\">"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"dString\">"+DatasetLibrary.getDatasetDescription(id)+"</textarea>"
+			+ "<input type=\"hidden\" name=\"dname\" value=\""+id+"\">"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Edit dataset\"></form></div>";
 
-    	ret+="<div><form action=\"/web/datasets/deleteDataset\" method=\"get\">"
+    	ret+="<div class=\"mainpage\"><form action=\"/web/datasets/deleteDataset\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"dname\" value=\""+id+"\">"
 			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete dataset\"></form></div>";
     	
     	ret += footer;
         return ret;
+    }
+
+    @GET
+    @Path("/datasets/editDataset/")
+    @Produces(MediaType.TEXT_HTML)
+    public String editDataset(@QueryParam("dname") String dname,@QueryParam("dString") String dString) throws IOException {
+    	String ret = header;
+    	DatasetLibrary.deleteDataset(dname);
+    	DatasetLibrary.addDataset(dname, dString);
+    	List<String> l = DatasetLibrary.getDatasets();
+    	ret += "<ul>";
+    	for(String d : l){
+			ret+= "<li><a href=\"/web/datasets/"+d+"\">"+d+"</a></li>";
+    		
+    	}
+    	ret+="</ul>";
+
+    	ret+="<div><form action=\"/web/datasets/addDataset\" method=\"get\">"
+			+ "Dataset name: <input type=\"text\" name=\"dname\"><br>"
+			+ "<textarea rows=\"40\" cols=\"150\" name=\"dString\"></textarea>"
+			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Add dataset\"></form></div>";
+    	
+    	ret += footer;
+    	return ret;
     }
 
     @GET
@@ -409,13 +492,13 @@ public class WebUI {
 			+ "<input class=\"styled-button\" type=\"submit\" value=\"Materialize Workflow\"></form></p>";
     	
     	ret+="<p><form action=\"/web/abstractWorkflows/addNode\" method=\"get\">"
-    			+ "Name: <input type=\"text\" name=\"name\"><br>"
+    			+ "Comma separated list: <textarea rows=\"1\" cols=\"80\" name=\"name\"></textarea><br>"
     			+ "<p><input type=\"radio\" name=\"type\" value=\"1\" checked>Abstract Operator<br>"
     			+ "<input type=\"radio\" name=\"type\" value=\"2\">Materialized Operator<br>"
     			+ "<input type=\"radio\" name=\"type\" value=\"3\">Abstract Dataset<br>"
     			+ "<input type=\"radio\" name=\"type\" value=\"4\">Materialized Dataset<br>"
     			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\"></p>"
-    			+ "<p><input class=\"styled-button\" type=\"submit\" value=\"Add node\"></form></p>";
+    			+ "<p><input class=\"styled-button\" type=\"submit\" value=\"Add nodes\"></form></p>";
     	
     	ret+="<p><form action=\"/web/abstractWorkflows/changeGraph\" method=\"get\">"
     		+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\">"
@@ -451,8 +534,14 @@ public class WebUI {
     @Produces(MediaType.TEXT_HTML)
     @Path("/abstractWorkflows/addNode/")
     public String addNodeToWorkflow(@QueryParam("workflowName") String workflowName, @QueryParam("type") String type, @QueryParam("name") String name) throws IOException {
-    	AbstractWorkflowLibrary.addNode(workflowName, type, name);
-
+    	if(name.isEmpty() || type.isEmpty() || workflowName.isEmpty())
+            return abstractWorkflowView(workflowName);
+    		
+    	String[] names = name.split(",");
+    	for (int i = 0; i < names.length; i++) {
+    		if(!names[i].isEmpty())
+    			AbstractWorkflowLibrary.addNode(workflowName, type, names[i]);
+		}
         return abstractWorkflowView(workflowName);
     }
     
