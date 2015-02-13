@@ -11,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -53,20 +54,22 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 	}
 
 
-	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow) {
-		//logger.info("Processing : "+toStringNorecursive());
+	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow, Workflow1DPTable dpTable) {
+		logger.info("Processing : "+toStringNorecursive());
 		List<WorkflowNode> ret = new ArrayList<WorkflowNode>();
 		List<List<WorkflowNode>> materializedInputs = new ArrayList<List<WorkflowNode>>();
 		for(WorkflowNode in : inputs){
-			List<WorkflowNode> l = in.materialize(materializedWorkflow);
+			List<WorkflowNode> l = in.materialize(materializedWorkflow,dpTable);
 			materializedInputs.add(l);
 		}
-		//logger.info(materializedInputs);
+		logger.info(materializedInputs);
 		if(isOperator){
 			if(isAbstract){
 				List<Operator> operators = OperatorLibrary.getMatches(abstractOperator);
 				for(Operator op : operators){
-					//logger.info("Materialized operator: "+op.opName);
+					Double operatorInputCost= 0.0;
+					List<WorkflowNode> plan = new ArrayList<WorkflowNode>();
+					logger.info("Materialized operator: "+op.opName);
 					WorkflowNode temp = new WorkflowNode(true, false);
 					temp.setOperator(op);
 					int inputs = Integer.parseInt(op.getParameter("Constraints.Input.number"));
@@ -81,12 +84,19 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						
 
 						boolean inputMatches=false;
+						Double operatorOneInputCost= Double.MAX_VALUE;
+						WorkflowNode bestInput = null;
+						
 						for(WorkflowNode in : materializedInputs.get(i)){
 							logger.info("Checking: "+in.dataset.datasetName);
 							if(tempInput.checkMatch(in.dataset)){
 								logger.info("true");
 								inputMatches=true;
 								tempInputNode.addInput(in);
+								if(dpTable.getCost(in.dataset)<operatorOneInputCost){
+									operatorOneInputCost=dpTable.getCost(in.dataset);
+									bestInput = in;
+								}
 							}
 							else{
 								//check move
@@ -100,6 +110,12 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 										moveNode.setOperator(m);
 										moveNode.addInput(in);
 										tempInputNode.addInput(moveNode);
+										Double tempCost = dpTable.getCost(in.dataset)+m.getCost();
+										if(tempCost<operatorOneInputCost){
+											operatorOneInputCost=tempCost;
+											bestInput=moveNode;
+										}
+										
 									}
 									
 								}
@@ -113,6 +129,17 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						}
 						//System.out.println(materializedInputs.get(i)+"fb");
 						//tempInputNode.addInputs(materializedInputs.get(i));
+						if(operatorOneInputCost>operatorInputCost){
+							operatorInputCost=operatorOneInputCost;
+						}
+						if(bestInput.isOperator){
+							//move
+							plan.addAll(dpTable.getPlan(bestInput.inputs.get(0).dataset));
+							plan.add(bestInput);
+						}
+						else{
+							plan.addAll(dpTable.getPlan(bestInput.dataset));
+						}
 					}
 					if(inputsMatch){
 						logger.info("all inputs match");
@@ -123,6 +150,9 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						tempOutputNode.setDataset(tempOutput);
 						tempOutputNode.addInput(temp);
 						ret.add(tempOutputNode);
+						
+						plan.add(temp);
+						dpTable.addRecord(tempOutput, plan, operatorInputCost+op.getCost());
 					}
 				}
 			}
@@ -150,6 +180,11 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 					temp.addInputs(l);
 				}
 				ret.add(temp);
+				
+				List<WorkflowNode> plan = new ArrayList<WorkflowNode>();
+				plan.add(temp);
+				dpTable.addRecord(dataset, plan, 0.0);
+				
 			}			
 		}
 		//System.out.println("Finished : "+toStringNorecursive());
@@ -235,13 +270,37 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 		
 	}
-	public void toWorkflowDictionary(WorkflowDictionary ret, Random ran) {
+	
+	public String getStatus(HashMap<String, List<WorkflowNode>> bestPlans){
+		logger.info("Check :"+toStringNorecursive());
+		boolean found=false;
+		for(List<WorkflowNode> l :bestPlans.values()){
+			for(WorkflowNode n : l){
+				if(n.toStringNorecursive().equals(toStringNorecursive())){
+					found=true;
+					break;
+				}
+			}
+			if(found)
+				break;
+		}
+		if(found){
+			logger.info("running");
+			return "running";
+		}
+		else{
+			logger.info("stopped");
+			return "stopped";
+		}
+	}
+	
+	public void toWorkflowDictionary(WorkflowDictionary ret, HashMap<String, List<WorkflowNode>> bestPlans) {
 		if(!visited){
-			OperatorDictionary op= new OperatorDictionary(toStringNorecursive(), getCost(), "running", isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
+			OperatorDictionary op= new OperatorDictionary(toStringNorecursive(), getCost(), getStatus(bestPlans), isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
 			
 			for(WorkflowNode n : inputs){
 				op.addInput(n.toStringNorecursive());
-				n.toWorkflowDictionary(ret, ran);
+				n.toWorkflowDictionary(ret, bestPlans);
 			}
 	    	ret.addOperator(op);
 			visited=true;

@@ -31,6 +31,7 @@ public class AbstractWorkflow1 {
 	private List<WorkflowNode> targets;
 	private HashMap<String,WorkflowNode> workflowNodes;
 	public String name;
+	private static Logger logger = Logger.getLogger(AbstractWorkflow1.class.getName());
 
 	@Override
 	public String toString() {
@@ -58,13 +59,26 @@ public class AbstractWorkflow1 {
 	public MaterializedWorkflow1 materialize(String nameExtention) {
 		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1(name+"_"+nameExtention);
 
+		Workflow1DPTable dpTable = new Workflow1DPTable();
 		for(WorkflowNode t : targets){
-			List<WorkflowNode> l = t.materialize(materializedWorkflow);
+			List<WorkflowNode> l = t.materialize(materializedWorkflow,dpTable);
 			WorkflowNode temp = new WorkflowNode(false, false);
 			temp.setDataset(t.dataset);
 			//System.out.println(l+"fsdgd");
 			temp.addInputs(l);
 			materializedWorkflow.addTarget(temp);
+			Double minCost=Double.MAX_VALUE;
+			List<WorkflowNode> bestPlan=null;
+			for(WorkflowNode r : l){
+				Double tempCost = dpTable.getCost(r.dataset);
+				if(tempCost<minCost){
+					minCost=tempCost;
+					bestPlan=dpTable.getPlan(r.dataset);
+				}
+			}
+			materializedWorkflow.setBestPlan(t.toStringNorecursive(), bestPlan);
+			logger.info("Optimal cost: "+minCost);
+			materializedWorkflow.optimalCost=minCost;
 		}
 		
 		return materializedWorkflow;
@@ -253,9 +267,8 @@ public class AbstractWorkflow1 {
 
 	public WorkflowDictionary toWorkflowDictionary() {
 		WorkflowDictionary ret = new WorkflowDictionary();
-    	Random ran = new Random();
 		for(WorkflowNode n : workflowNodes.values()){
-	    	OperatorDictionary op = new OperatorDictionary(n.toStringNorecursive(), n.getCost(), "running", n.isOperator+"", n.toStringNorecursive()+"\n"+n.toKeyValueString());
+	    	OperatorDictionary op = new OperatorDictionary(n.toStringNorecursive(), n.getCost(), n.getStatus(new HashMap<String, List<WorkflowNode>>()), n.isOperator+"", n.toStringNorecursive()+"\n"+n.toKeyValueString());
 
 			for(WorkflowNode in : n.inputs){
 				op.addInput(in.toStringNorecursive());
@@ -271,9 +284,8 @@ public class AbstractWorkflow1 {
 			t.setAllNotVisited();
 		}
 		WorkflowDictionary ret = new WorkflowDictionary();
-    	Random ran = new Random();
     	for(WorkflowNode target : targets){
-    		target.toWorkflowDictionary(ret, ran);
+    		target.toWorkflowDictionary(ret, new HashMap<String, List<WorkflowNode>>());
     	}
 		return ret;
 	}

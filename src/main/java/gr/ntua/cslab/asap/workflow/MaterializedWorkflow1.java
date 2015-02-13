@@ -18,11 +18,15 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 
+import org.apache.log4j.Logger;
+
 public class MaterializedWorkflow1 {
 	private List<WorkflowNode> targets;
+	private HashMap<String,List<WorkflowNode>> bestPlans;
 	public double optimalCost;
 	public int count;
 	public String name;
+	private static Logger logger = Logger.getLogger(MaterializedWorkflow1.class.getName());
 	
 	@Override
 	public String toString() {
@@ -32,10 +36,19 @@ public class MaterializedWorkflow1 {
 	public MaterializedWorkflow1(String name) {
 		this.name = name;
 		targets = new ArrayList<WorkflowNode>();
+		bestPlans = new HashMap<String, List<WorkflowNode>>();
 		optimalCost=0.0;
 		count=0;
 	}
 
+	public void setBestPlan(String target, List<WorkflowNode> plan){
+		logger.info("Target: "+target);
+		logger.info("Best plan: ");
+		for(WorkflowNode w : plan)
+			logger.info(w.toStringNorecursive());
+		bestPlans.put(target, plan);
+	}
+	
 	public void setAllNotVisited(){
 
 		for(WorkflowNode t : targets){
@@ -57,9 +70,8 @@ public class MaterializedWorkflow1 {
 			t.setAllNotVisited();
 		}
 		WorkflowDictionary ret = new WorkflowDictionary();
-    	Random ran = new Random();
     	for(WorkflowNode target : targets){
-    		target.toWorkflowDictionary(ret, ran);
+    		target.toWorkflowDictionary(ret, bestPlans);
     	}
 		return ret;
 	}

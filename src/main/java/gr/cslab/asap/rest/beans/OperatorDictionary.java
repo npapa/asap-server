@@ -20,10 +20,7 @@ public class OperatorDictionary {
 	public OperatorDictionary(String name, String cost, String status, String isOperator, String description) {
 		this.name = name;
 		this.cost = cost;
-		if(isOperator.equals("true"))
-			this.status = "running";
-		else
-			this.status = "stopped";
+		this.status = status;
 		this.isOperator = isOperator;
 		this.description = description;
 		input = new ArrayList<String>();
