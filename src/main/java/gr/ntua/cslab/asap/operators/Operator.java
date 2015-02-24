@@ -1,15 +1,11 @@
 package gr.ntua.cslab.asap.operators;
 
-import gr.ntua.cslab.asap.daemon.Main;
-import gr.ntua.cslab.asap.daemon.ServerStaticComponents;
-import gr.ntua.cslab.asap.workflow.AbstractWorkflow1;
 import gr.ntua.cslab.asap.workflow.WorkflowNode;
 import net.sourceforge.jeval.EvaluationException;
 import net.sourceforge.jeval.Evaluator;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,10 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
-import com.sun.xml.internal.bind.v2.runtime.Name;
 
 public class Operator {
 	public SpecTree optree;
@@ -74,6 +68,26 @@ public class Operator {
 	
 
 
+	public void outputFor(Dataset d, int position, List<WorkflowNode> inputs) {
+		//System.out.println("Generating output for pos: "+ position);
+		d.datasetTree = optree.copyInputSubTree("Constraints.Output"+position);
+		if(d.datasetTree == null)
+			d.datasetTree = new SpecTree();
+		
+		int min = Integer.MAX_VALUE;
+		for(WorkflowNode n :inputs){
+			int temp = Integer.MAX_VALUE;
+			if(!n.inputs.get(0).isOperator)
+				temp= Integer.parseInt(n.inputs.get(0).dataset.getParameter("Optimization.uniqueKeys"));
+			else
+				 temp = Integer.parseInt(n.inputs.get(0).inputs.get(0).dataset.getParameter("Optimization.uniqueKeys"));
+			if(temp<min){
+				min=temp;
+			}
+		}
+		d.datasetTree.add("Optimization.uniqueKeys", min+"");
+	}
+
 	public void readPropertiesFromFile(InputStream stream) throws IOException {
 		Properties props = new Properties();
 		props.load(stream);
@@ -84,7 +98,6 @@ public class Operator {
 	
 	public void writeToPropertiesFile(String filename) throws IOException {
         Properties props = new Properties();
-
 		optree.writeToPropertiesFile("", props);
         File f = new File(filename);
         if (!f.exists()) {
@@ -98,8 +111,6 @@ public class Operator {
 	
 
 	public static void main(String[] args) throws IOException {
-		
-		
 		Operator op = new Operator("HBase_HashJoin");
 		op.readPropertiesFromFile("/home/nikos/test1");
 		System.out.println(op.toKeyValues("\n"));

@@ -108,7 +108,7 @@ public class Main {
         
         ResourceHandler resource_handler = new ResourceHandler();
         resource_handler.setDirectoriesListed(true);
-        resource_handler.setWelcomeFiles(new String[] { "index.html" });
+        resource_handler.setWelcomeFiles(new String[] { "test.html" });
         resource_handler.setResourceBase("www/");
         HandlerList handlers = new HandlerList();
         handlers.setHandlers(new Handler[] { resource_handler, context });
@@ -172,6 +172,7 @@ public class Main {
 		DatasetLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/datasets");
 		AbstractOperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractOperators");
 		OperatorLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/operators");
+		
 		AbstractWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractWorkflows");
 		MaterializedWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/workflows");
 	}

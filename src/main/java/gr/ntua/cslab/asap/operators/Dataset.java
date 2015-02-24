@@ -1,11 +1,14 @@
 package gr.ntua.cslab.asap.operators;
 
+import gr.ntua.cslab.asap.workflow.WorkflowNode;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.Map.Entry;
 
@@ -49,6 +52,8 @@ public class Dataset implements Comparable<Dataset> {
 		return datasetTree.checkMatch(d.datasetTree);
 	}
 
+
+	
 	public void outputFor(Operator op, int position) {
 		//System.out.println("Generating output for pos: "+ position);
 		datasetTree = op.optree.copyInputSubTree("Constraints.Output"+position);
@@ -108,5 +113,6 @@ public class Dataset implements Comparable<Dataset> {
 	public String getParameter(String key) {
 		return datasetTree.getParameter(key);
 	}
+
 
 }

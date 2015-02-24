@@ -40,6 +40,7 @@ public class WebUI {
     private static String workflowUp=readFile("workflowUp.html").trim();
     private static String abstractWorkflowUp=readFile("abstractWorkflowUp.html").trim();
     private static String workflowLow=readFile("workflowLow.html");
+    private static String scatterPlot=readFile("scatterPlot.html");
     
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -232,12 +233,25 @@ public class WebUI {
 
     	ret+="<form action=\"/web/operators/deleteOperator\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form></div>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form><br>";
+
+    	ret+="<form action=\"/web/operators/operatorProfile\" method=\"get\" target=\"_blank\">"
+			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"View profile\"></form></div>";
     	
     	ret += footer;
         return ret;
     }
 
+
+    @GET
+    @Path("/operators/operatorProfile/")
+    @Produces(MediaType.TEXT_HTML)
+    public String operatorProfile(@QueryParam("opname") String opname) throws IOException {
+    	String ret = header + scatterPlot+ footer;
+    	return ret;
+    }
+    
     @GET
     @Path("/operators/editOperator/")
     @Produces(MediaType.TEXT_HTML)

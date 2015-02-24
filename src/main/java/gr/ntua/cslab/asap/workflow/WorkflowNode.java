@@ -154,7 +154,8 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						WorkflowNode tempOutputNode = new WorkflowNode(false, false);
 						Dataset tempOutput = new Dataset("t"+materializedWorkflow.count);
 						materializedWorkflow.count++;
-						tempOutput.outputFor(op, 0);
+						op.outputFor(tempOutput, 0, temp.inputs);
+						//tempOutput.outputFor(op, 0, temp.inputs);
 						tempOutputNode.setDataset(tempOutput);
 						tempOutputNode.addInput(temp);
 						ret.add(tempOutputNode);
