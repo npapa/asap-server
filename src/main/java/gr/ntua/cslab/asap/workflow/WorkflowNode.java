@@ -361,7 +361,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 	}
 
-	public void writeToDir(String opDir, String datasetDir,BufferedWriter graphWritter) throws IOException {
+	public void writeToDir(String opDir, String datasetDir,BufferedWriter graphWritter) throws Exception {
 
 		if(!visited){
 

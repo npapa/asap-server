@@ -229,15 +229,16 @@ public class WebUI {
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\">"+OperatorLibrary.getOperatorDescription(id)+"</textarea>"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
 			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Edit operator\"></form><br>";
+    	
+    	ret+="<form action=\"/web/operators/operatorProfile\" method=\"get\">"
+			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"View profile\"></form><br>";
     	//ret += "<p>"+OperatorLibrary.getOperatorDescription(id)+"</p>";
 
     	ret+="<form action=\"/web/operators/deleteOperator\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form><br>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Delete operator\"></form></div>";
 
-    	ret+="<form action=\"/web/operators/operatorProfile\" method=\"get\" target=\"_blank\">"
-			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"View profile\"></form></div>";
     	
     	ret += footer;
         return ret;
@@ -248,14 +249,15 @@ public class WebUI {
     @Path("/operators/operatorProfile/")
     @Produces(MediaType.TEXT_HTML)
     public String operatorProfile(@QueryParam("opname") String opname) throws IOException {
-    	String ret = header + scatterPlot+ footer;
+    	String csv = OperatorLibrary.getProfile(opname);
+    	String ret = header + scatterPlot.replace("$$", csv)+ footer;
     	return ret;
     }
     
     @GET
     @Path("/operators/editOperator/")
     @Produces(MediaType.TEXT_HTML)
-    public String editOperator(@QueryParam("opname") String opname,@QueryParam("opString") String opString) throws IOException {
+    public String editOperator(@QueryParam("opname") String opname,@QueryParam("opString") String opString) throws Exception {
     	String ret = header;
     	OperatorLibrary.deleteOperator(opname);
     	OperatorLibrary.addOperator(opname, opString);
@@ -305,7 +307,7 @@ public class WebUI {
     @Produces(MediaType.TEXT_HTML)
     public String addOperator(
             @QueryParam("opname") String opname,
-            @QueryParam("opString") String opString) throws IOException {
+            @QueryParam("opString") String opString) throws Exception {
     	String ret = header;
     	OperatorLibrary.addOperator(opname, opString);
     	List<String> l = OperatorLibrary.getOperators();
@@ -574,7 +576,7 @@ public class WebUI {
     @Path("/abstractWorkflows/materialize/")
     @Produces(MediaType.TEXT_HTML)
     public String materializeAbstractWorkflow(
-            @QueryParam("workflowName") String workflowName) throws IOException, NumberFormatException, EvaluationException {
+            @QueryParam("workflowName") String workflowName) throws Exception{
     	String ret = header+workflowUp+"/workflows/"+AbstractWorkflowLibrary.getMaterializedWorkflow(workflowName)+workflowLow;
     	ret += footer;
     	return ret;

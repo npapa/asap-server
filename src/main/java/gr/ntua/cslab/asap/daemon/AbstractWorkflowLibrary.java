@@ -46,7 +46,7 @@ public class AbstractWorkflowLibrary {
 		return new ArrayList<String>(abstractWorkflows.keySet());
 	}
 
-	public static String getMaterializedWorkflow(String workflowName) throws IOException, NumberFormatException, EvaluationException {
+	public static String getMaterializedWorkflow(String workflowName) throws Exception {
 		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
 		DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss");
 		Date date = new Date();

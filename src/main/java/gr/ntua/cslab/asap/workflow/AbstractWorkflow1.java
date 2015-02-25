@@ -88,7 +88,7 @@ public class AbstractWorkflow1 {
 		return materializedWorkflow;
 	}
 	
-	public void writeToDir(String directory) throws IOException {
+	public void writeToDir(String directory) throws Exception {
 
 		for(WorkflowNode t : targets){
 			t.setAllNotVisited();
@@ -295,7 +295,7 @@ public class AbstractWorkflow1 {
 	}
 	
 	
-	public static void main(String[] args) throws IOException, NumberFormatException, EvaluationException {
+	public static void main(String[] args) throws Exception{
 
 
 		Evaluator evaluator = new Evaluator();

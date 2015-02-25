@@ -1,6 +1,7 @@
 package gr.ntua.cslab.asap.operators;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -175,6 +176,18 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 		}
 	}
 
+	public void toKeyValues(String curentPath, HashMap<String,String> curentValues) {
+		if(children.size()==0){
+			curentPath=curentPath.substring(0, curentPath.length()-1);
+			curentValues.put(curentPath, value);
+		}
+		else{
+			for(SpecTreeNode n : children.values()){
+				n.toKeyValues(curentPath+n.name+".", curentValues);
+			}
+		}
+	}
+	
 	public String toKeyValues(String curentPath, String ret, String separator) {
 		if(children.size()==0){
 			ret+= curentPath+name+" = "+value+separator;
@@ -365,7 +378,33 @@ public class SpecTreeNode implements Comparable<SpecTreeNode> {
 		}
 		return ret;
 	}
-
+	
+	public SpecTreeNode getNode(String key) {
+		if (key.contains(".")){
+			String curname = key.substring(0, key.indexOf("."));
+			//System.out.println("Checking name: "+curname);
+			SpecTreeNode s = children.get(curname);
+			
+			if(s!=null){
+				//System.out.println("Found!!");
+				String nextKey = key.substring(key.indexOf(".")+1);
+				return s.getNode(nextKey);
+			}
+			else{
+				return null;
+			}
+		}
+		else{//leaf
+			SpecTreeNode s = children.get(key);
+			if(s!=null){
+				return s;
+			}
+			else{
+				//not found
+				return null;
+			}
+		}
+	}
 
 	public String getParameter(String key) {
 		if (key.contains(".")){

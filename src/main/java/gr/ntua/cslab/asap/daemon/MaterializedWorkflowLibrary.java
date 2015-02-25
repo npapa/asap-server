@@ -18,7 +18,7 @@ public class MaterializedWorkflowLibrary {
 	private static HashMap<String,MaterializedWorkflow1> materializedWorkflows;
 	private static String workflowDirectory;
 
-	public static void initialize(String directory) throws IOException{
+	public static void initialize(String directory) throws Exception{
 
 		workflowDirectory = directory;
 		materializedWorkflows = new HashMap<String, MaterializedWorkflow1>();
@@ -43,7 +43,7 @@ public class MaterializedWorkflowLibrary {
 		return new ArrayList<String>(materializedWorkflows.keySet());
 	}
 
-	public static void add(MaterializedWorkflow1 workflow) throws IOException {
+	public static void add(MaterializedWorkflow1 workflow) throws Exception {
 		
 		materializedWorkflows.put(workflow.name, workflow);
 		workflow.writeToDir(workflowDirectory);

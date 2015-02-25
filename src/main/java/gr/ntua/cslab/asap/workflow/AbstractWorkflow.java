@@ -313,7 +313,7 @@ public class AbstractWorkflow {
         
 	}
 	
-	public static void main(String[] args) throws IOException, NumberFormatException, EvaluationException {
+	public static void main(String[] args) throws Exception {
 		MaterializedOperators library =  new MaterializedOperators();
 		AbstractWorkflow abstractWorkflow = new AbstractWorkflow(library);
 		Dataset d1 = new Dataset("hbaseDataset");

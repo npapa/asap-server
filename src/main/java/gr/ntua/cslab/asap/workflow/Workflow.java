@@ -144,7 +144,7 @@ public class Workflow {
 		return ret;
 	}
 
-	public void writeToDir(String directory) throws IOException {
+	public void writeToDir(String directory) throws Exception {
         File workflowDir = new File(directory);
         if (!workflowDir.exists()) {
         	workflowDir.mkdirs();

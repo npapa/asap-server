@@ -200,6 +200,25 @@ public class SpecTree {
 		return ret;
 	}
 
+
+	public SpecTreeNode getNode(String key) {
+		if (key.contains(".")){
+			String curname = key.substring(0, key.indexOf("."));
+			//System.out.println("Checking name: "+curname);
+			SpecTreeNode s = tree.get(curname);
+			if(s!=null){
+				//System.out.println("Found!!");
+				String nextKey = key.substring(key.indexOf(".")+1);
+				return s.getNode(nextKey);
+			}
+			else{
+				return null;
+			}
+		}
+		return tree.get(key); 
+	}
+
+	
 	public String getParameter(String key) {
 		if (key.contains(".")){
 			String curname = key.substring(0, key.indexOf("."));

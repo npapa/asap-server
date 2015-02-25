@@ -87,6 +87,11 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>gr.ntua.ece.cslab</groupId>
+            <artifactId>panic-core</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
             <version>9.2.7.v20150116</version>

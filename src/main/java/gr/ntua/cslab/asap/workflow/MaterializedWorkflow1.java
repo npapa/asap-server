@@ -79,7 +79,7 @@ public class MaterializedWorkflow1 {
 	}
 	
 
-	public void writeToDir(String directory) throws IOException {
+	public void writeToDir(String directory) throws Exception {
 		directory+="/"+name;
 		for(WorkflowNode t : targets){
 			t.setAllNotVisited();
@@ -114,16 +114,16 @@ public class MaterializedWorkflow1 {
         
 	}
 
-	public void readFromDir(String directory) throws IOException {
+	public void readFromDir(String directory) throws Exception {
 		HashMap<String,WorkflowNode> nodes = new HashMap<String, WorkflowNode>();
 		File folder = new File(directory+"/operators");
 		File[] files = folder.listFiles();
 
 		for (int i = 0; i < files.length; i++) {
-			if (files[i].isFile()) {
+			if (files[i].isDirectory()) {
 				WorkflowNode n = new WorkflowNode(true, false);
 				Operator temp = new Operator(files[i].getName());
-				temp.readPropertiesFromFile(files[i]);
+				temp.readFromFile(files[i]);
 				n.setOperator(temp);
 				nodes.put(temp.opName, n);
 			} 
@@ -152,6 +152,7 @@ public class MaterializedWorkflow1 {
 				this.targets.add(nodes.get(e[0]));
 			}
 			else{
+				//System.out.println(e[0]+" "+e[1]);
 				WorkflowNode src = nodes.get(e[0]);
 				WorkflowNode dest = nodes.get(e[1]);
 				dest.inputs.add(src);
@@ -174,7 +175,7 @@ public class MaterializedWorkflow1 {
 	
 	
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		/*MaterializedWorkflow1 mw = new MaterializedWorkflow1();
 		
 		WorkflowNode t = new WorkflowNode(false,false);

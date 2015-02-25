@@ -3,6 +3,7 @@ package gr.ntua.cslab.asap.daemon;
 import gr.ntua.cslab.asap.operators.AbstractOperator;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.Operator;
+import gr.ntua.ece.cslab.panic.core.containers.beans.OutputSpacePoint;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -19,17 +20,17 @@ public class OperatorLibrary {
 	private static String operatorDirectory;
 	private static Logger logger = Logger.getLogger(OperatorLibrary.class.getName());
 	
-	public static void initialize(String directory) throws IOException{
+	public static void initialize(String directory) throws Exception{
 		operatorDirectory = directory;
 		operators = new HashMap<String,Operator>();
 		File folder = new File(directory);
 		File[] listOfFiles = folder.listFiles();
 
 		for (int i = 0; i < listOfFiles.length; i++) {
-			if (listOfFiles[i].isFile() && !listOfFiles[i].isHidden()) {
+			if (listOfFiles[i].isDirectory()) {
 		        Logger.getLogger(OperatorLibrary.class.getName()).info("Loading operator: " + listOfFiles[i].getName());
 				Operator temp = new Operator(listOfFiles[i].getName());
-				temp.readPropertiesFromFile(listOfFiles[i]);
+				temp.readFromFile(listOfFiles[i]);
 				operators.put(temp.opName, temp);
 		    }
 		}
@@ -78,7 +79,7 @@ public class OperatorLibrary {
 		operators.put(o.opName, o);
 	}
 
-	public static void addOperator(String opname, String opString) throws IOException {
+	public static void addOperator(String opname, String opString) throws Exception {
     	Operator o = new Operator(opname);
     	InputStream is = new ByteArrayInputStream(opString.getBytes());
     	o.readPropertiesFromFile(is);
@@ -96,6 +97,17 @@ public class OperatorLibrary {
 
 	public static Operator getOperator(String opname) {
 		return operators.get(opname);
+	}
+
+	public static String getProfile(String opname) {
+		Operator op = operators.get(opname);
+		List<OutputSpacePoint> values = op.performanceModel.getOriginalPointValues();
+		System.out.println(values.toString());
+		if(opname.equals("Sort"))
+			return "/terasort.csv";
+		else
+			return "/iris.csv";
+			
 	}
 
 }
