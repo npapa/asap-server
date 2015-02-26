@@ -248,7 +248,7 @@ public class WebUI {
     @GET
     @Path("/operators/operatorProfile/")
     @Produces(MediaType.TEXT_HTML)
-    public String operatorProfile(@QueryParam("opname") String opname) throws IOException {
+    public String operatorProfile(@QueryParam("opname") String opname) throws Exception {
     	String csv = OperatorLibrary.getProfile(opname);
     	String ret = header + scatterPlot.replace("$$", csv)+ footer;
     	return ret;

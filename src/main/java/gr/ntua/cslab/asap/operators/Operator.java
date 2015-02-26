@@ -5,15 +5,19 @@ import gr.ntua.ece.cslab.panic.core.containers.beans.InputSpacePoint;
 import gr.ntua.ece.cslab.panic.core.containers.beans.OutputSpacePoint;
 import gr.ntua.ece.cslab.panic.core.models.AbstractWekaModel;
 import gr.ntua.ece.cslab.panic.core.models.Model;
+import gr.ntua.ece.cslab.panic.core.samplers.Sampler;
+import gr.ntua.ece.cslab.panic.core.samplers.UniformSampler;
 import net.sourceforge.jeval.EvaluationException;
 import net.sourceforge.jeval.Evaluator;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,9 +38,20 @@ public class Operator {
 		opName = name;
 	}
 	
+
+	public void readModel(File file) throws Exception {
+		String modelClass = optree.getParameter("Optimization.model");
+		if(modelClass==null){
+			performanceModel = AbstractWekaModel.readFromFile(file.toString()+"/model");
+		}
+	}
+	
 	public void configureModel() throws Exception {
 		String modelClass = optree.getParameter("Optimization.model");
-		performanceModel = (Model) Class.forName(modelClass).getConstructor().newInstance();
+		System.out.println(modelClass);
+		if(modelClass!=null){
+			performanceModel = (Model) Class.forName(modelClass).getConstructor().newInstance();
+		}
 
 		HashMap<String, String> inputSpace = new HashMap<String, String>();
 		optree.getNode("Optimization.inputSpace").toKeyValues("", inputSpace );
@@ -49,23 +64,94 @@ public class Operator {
 
 		HashMap<String, String> conf = new HashMap<String, String>();
 		optree.getNode("Optimization").toKeyValues("", conf );
+		System.out.println("sadfas: "+conf);
 		performanceModel.configureClassifier(conf);
-		
-		InputSpacePoint ip =  new InputSpacePoint();
-        HashMap<String, Double> values = new HashMap<String, Double>();
-        values.put("In0.uniqueKeys", 20000.0);
-        values.put("In1.uniqueKeys", 10000000.0);
-        values.put("cores", 10.0);
-        ip.setValues(values);
-        
-		OutputSpacePoint op =  new 	OutputSpacePoint();
-        values = new HashMap<String, Double>();
-        values.put("execTime", 0.0);
-        values.put("Out0.uniqueKeys", 0.0);
-        op.setValues(values);
-        System.out.println(performanceModel.getPoint(ip,op));
 	}
 
+
+	public void writeCSVfileUniformSampleOfModel(Double samplingRate, String filename, String delimiter, boolean addPredicted) throws Exception{
+
+        File file = new File(filename);
+    	FileOutputStream fos = new FileOutputStream(file);
+    	 
+    	BufferedWriter writter = new BufferedWriter(new OutputStreamWriter(fos));
+    	getUniformSampleOfModel(samplingRate, writter, delimiter, addPredicted);
+
+    	writter.close();
+		
+	}
+	
+	public void writeCSVfileUniformSampleOfModel(Double samplingRate, String filename, String delimiter) throws Exception{
+
+        File file = new File(filename);
+    	FileOutputStream fos = new FileOutputStream(file);
+    	 
+    	BufferedWriter writter = new BufferedWriter(new OutputStreamWriter(fos));
+    	getUniformSampleOfModel(samplingRate, writter, delimiter, false);
+
+    	writter.close();
+	}
+	
+	protected void getUniformSampleOfModel(Double samplingRate, BufferedWriter writter, String delimiter, boolean addPredicted) throws Exception{
+		
+		Sampler s = (Sampler) new UniformSampler();
+        s.setSamplingRate(samplingRate);
+    	HashMap<String, List<Double>> dim = new HashMap<String, List<Double>>();
+        for(Entry<String, String> e : performanceModel.getInputSpace().entrySet()){
+            writter.append(e.getKey()+delimiter);
+        	String[] limits = e.getValue().split(delimiter);
+        	List<Double> l = new ArrayList<Double>();
+        	Double min = Double.parseDouble(limits[1]);
+        	Double max = Double.parseDouble(limits[2]);
+        	if(limits[3].startsWith("l")){
+        		Double step = 10.0;
+        		for (double i = min; i <= max; i*=step) {
+        			l.add(i);
+				}
+        	}
+        	else{
+        		Double step = Double.parseDouble(limits[3]);
+        		for (double i = min; i <= max; i+=step) {
+        			l.add(i);
+				}
+        	}
+        	dim.put(e.getKey(), l);
+        }
+        int i=0;
+        for(String k : performanceModel.getOutputSpace().keySet()){
+            writter.append(k);
+        	i++;
+        	if(i<performanceModel.getOutputSpace().size()){
+                writter.append(delimiter);
+        	}
+        }
+        if(addPredicted){
+            writter.append(delimiter+"prediction");
+        }
+        writter.newLine();
+        //System.out.println(dim);
+		s.setDimensionsWithRanges(dim);
+        s.configureSampler();
+        while (s.hasMore()) {
+            InputSpacePoint nextSample = s.next();
+    		OutputSpacePoint op =  new 	OutputSpacePoint();
+            HashMap<String, Double> values = new HashMap<String, Double>();
+            for(String k :  performanceModel.getOutputSpace().keySet()){
+            	values.put(k, null);
+            }
+            op.setValues(values);
+            //System.out.println(nextSample);
+            OutputSpacePoint res = performanceModel.getPoint(nextSample,op);
+            //System.out.println(res);
+            writter.append(res.toCSVString(delimiter));
+            if(addPredicted){
+                writter.append(delimiter+"true");
+            }
+            writter.newLine();
+        }
+        
+	}
+	
 	public void add(String key, String value) {
         //Logger.getLogger(Main.class.getName()).info("key: "+key+" value: "+value);
 		optree.add(key,value);
@@ -241,16 +327,16 @@ public class Operator {
 		op.add("Constraints.EngineSpecification.Distributed.MapReduce.masterLocation", "127.0.0.1");
 
 		op.add("Optimization.model", "gr.ntua.ece.cslab.panic.core.models.UserFunction");
-		op.add("Optimization.inputSpace.In0.uniqueKeys", "Integer");
-		op.add("Optimization.inputSpace.In1.uniqueKeys", "Integer");
-		op.add("Optimization.inputSpace.cores", "Integer");
+		op.add("Optimization.inputSpace.In0.uniqueKeys", "Double,1.0,1E10,l");
+		op.add("Optimization.inputSpace.In1.uniqueKeys", "Double,1.0,1E10,l");
+		op.add("Optimization.inputSpace.cores", "Double,1.0,40.0,5.0");
 		op.add("Optimization.outputSpace.execTime", "Double");
 		op.add("Optimization.outputSpace.Out0.uniqueKeys", "Integer");
 		op.add("Optimization.execTime", "100.0 + (In0.uniqueKeys + In1.uniqueKeys)/cores");
 		op.add("Optimization.Out0.uniqueKeys", "In0.uniqueKeys + In1.uniqueKeys");
 		
 		op.configureModel();
-		
+		op.writeCSVfileUniformSampleOfModel(0.2, "test.csv", ",");
 		
 		System.exit(0);
 		
@@ -328,6 +414,9 @@ public class Operator {
 		long stop = System.currentTimeMillis();
 		System.out.println("Time (s): "+((double)(stop-start))/1000.0);
 	}
+
+
+
 
 
 	

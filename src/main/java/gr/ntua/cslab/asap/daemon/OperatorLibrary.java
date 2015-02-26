@@ -4,11 +4,20 @@ import gr.ntua.cslab.asap.operators.AbstractOperator;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.Operator;
 import gr.ntua.ece.cslab.panic.core.containers.beans.OutputSpacePoint;
+import gr.ntua.ece.cslab.panic.core.samplers.Sampler;
+import gr.ntua.ece.cslab.panic.core.samplers.UniformSampler;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +40,7 @@ public class OperatorLibrary {
 		        Logger.getLogger(OperatorLibrary.class.getName()).info("Loading operator: " + listOfFiles[i].getName());
 				Operator temp = new Operator(listOfFiles[i].getName());
 				temp.readFromFile(listOfFiles[i]);
+				temp.readModel(listOfFiles[i]);
 				operators.put(temp.opName, temp);
 		    }
 		}
@@ -83,6 +93,7 @@ public class OperatorLibrary {
     	Operator o = new Operator(opname);
     	InputStream is = new ByteArrayInputStream(opString.getBytes());
     	o.readPropertiesFromFile(is);
+    	o.configureModel();
     	o.writeToPropertiesFile("asapLibrary/operators/"+o.opName);
     	add(o);
     	is.close();
@@ -99,15 +110,45 @@ public class OperatorLibrary {
 		return operators.get(opname);
 	}
 
-	public static String getProfile(String opname) {
+	public static String getProfile(String opname) throws Exception {
 		Operator op = operators.get(opname);
-		List<OutputSpacePoint> values = op.performanceModel.getOriginalPointValues();
-		System.out.println(values.toString());
-		if(opname.equals("Sort"))
+		op.configureModel();
+		
+
+		File csv  = new File(operatorDirectory+"/"+op.opName+"/data.csv");
+		if(csv.exists()){
+			op.writeCSVfileUniformSampleOfModel(1.0, "www/test.csv", ",",true);
+			append("www/test.csv",operatorDirectory+"/"+op.opName+"/data.csv",",");
+		}
+		else{
+			op.writeCSVfileUniformSampleOfModel(1.0, "www/test.csv", ",",false);
+		}
+		//op.writeCSVfileUniformSampleOfModel(1.0, "www/test.csv", ",");
+		return "/test.csv";
+		/*if(opname.equals("Sort"))
 			return "/terasort.csv";
 		else
-			return "/iris.csv";
+			return "/iris.csv";*/
 			
 	}
 
+	private static void append(String toCSV, String fromCSV,String delimiter) throws Exception {
+
+        PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(toCSV, true)));
+        BufferedReader br = new BufferedReader(new FileReader(fromCSV));
+        String line = br.readLine();
+        line = br.readLine();
+        while (line != null) {
+            out.append(line+delimiter+"false");
+            out.append(System.lineSeparator());
+            line = br.readLine();
+        }
+        out.close();
+    	br.close();
+	}
+	
+	/*protected static void writeCSV(String file, ){
+		
+	}*/
+	
 }
