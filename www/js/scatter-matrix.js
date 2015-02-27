@@ -246,6 +246,7 @@ ScatterMatrix.prototype.__draw =
 
     // Get x and y scales for each numeric variable
     var x = {}, y = {};
+    var isLog = {};
     numeric_variables.forEach(function(trait) {
       // Coerce values to numbers.
       data.forEach(function(d) { d[trait] = +d[trait]; });
@@ -254,9 +255,21 @@ ScatterMatrix.prototype.__draw =
           domain = [d3.min(data, value), d3.max(data, value)],
           range_x = [padding / 2, size - padding / 2],
           range_y = [padding / 2, size - padding / 2];
-
-      x[trait] = d3.scale.linear().domain(domain).range(range_x);
-      y[trait] = d3.scale.linear().domain(domain).range(range_y.reverse());
+      
+      var r = domain[1]-domain[0]; 
+      //console.error(domain);
+      if(r>10000){
+        isLog[trait]=1;
+      	//console.error("setting log : "+isLog);
+      	x[trait] = d3.scale.log().base(10).domain(domain).range(range_x);
+      	y[trait] = d3.scale.log().base(10).domain(domain).range(range_y.reverse());
+      }
+      else{
+        isLog[trait]=0;
+      	//console.error("setting log : "+isLog);
+      	x[trait] = d3.scale.linear().domain(domain).range(range_x);
+      	y[trait] = d3.scale.linear().domain(domain).range(range_y.reverse());
+      }
     });
 
     // When drilling, user select one or more variables. The first drilled
@@ -321,21 +334,57 @@ ScatterMatrix.prototype.__draw =
     var intf = d3.format('d');
     var fltf = d3.format('.f');
     var scif = d3.format('e');
-
+    var currentVariable;
     x_axis.ticks(5)
           .tickSize(size * y_variables.length)
           .tickFormat(function(d) {
-            if (Math.abs(+d) > 10000 || (Math.abs(d) < 0.001 && Math.abs(d) != 0)) { return scif(d); }
-            if (parseInt(d) == +d) { return intf(d); }
-            return fltf(d);
+      		//console.error(d);
+      		//console.error("checking log : "+isLog[currentVariable]);
+          	if(isLog[currentVariable]==1){
+	            var temp;
+	            if (Math.abs(+d) > 100 || (Math.abs(d) < 0.001 && Math.abs(d) != 0)) { 
+	      			temp=scif(d);
+	      		}
+	            else if (parseInt(d) == +d) { temp=intf(d); }
+	            else{ temp=fltf(d);}
+	      		if(temp.substring(0, 1) === "1"){ 
+	      			return temp;
+	      		}
+	      		else{ 
+	      			return "";
+	      		} 
+          	}
+          	else{
+	            if (Math.abs(+d) > 100 || (Math.abs(d) < 0.001 && Math.abs(d) != 0)) { return scif(d); }
+	            if (parseInt(d) == +d) { return intf(d); }
+	            return fltf(d);
+            }
           });
 
     y_axis.ticks(5)
           .tickSize(size * x_variables.length)
           .tickFormat(function(d) {
-            if (Math.abs(+d) > 10000 || (Math.abs(d) < 0.001 && Math.abs(d) != 0)) { return scif(d); }
-            if (parseInt(d) == +d) { return intf(d); }
-            return fltf(d);
+      		//console.error(d);
+      		//console.error("checking log : "+isLog[currentVariable]);
+          	if(isLog[currentVariable]==1){
+	            var temp;
+	            if (Math.abs(+d) > 100 || (Math.abs(d) < 0.001 && Math.abs(d) != 0)) { 
+	      			temp=scif(d);
+	      		}
+	            else if (parseInt(d) == +d) { temp=intf(d); }
+	            else{ temp=fltf(d);}
+	      		if(temp.substring(0, 1) === "1"){ 
+	      			return temp;
+	      		}
+	      		else{ 
+	      			return "";
+	      		} 
+          	}
+          	else{
+	            if (Math.abs(+d) > 100 || (Math.abs(d) < 0.001 && Math.abs(d) != 0)) { return scif(d); }
+	            if (parseInt(d) == +d) { return intf(d); }
+	            return fltf(d);
+            }
           });
 
     // Brush - for highlighting regions of data
@@ -375,7 +424,7 @@ ScatterMatrix.prototype.__draw =
       .enter().append("svg:g")
         .attr("class", "x axis")
         .attr("transform", function(d, i) { return "translate(" + i * size + ",0)"; })
-        .each(function(d) { d3.select(this).call(x_axis.scale(x[d]).orient("bottom")); });
+        .each(function(d) { currentVariable=d; d3.select(this).call(x_axis.scale(x[d]).orient("bottom")); });
 
     // Draw Y-axis
     svg.selectAll("g.y.axis")
@@ -383,7 +432,7 @@ ScatterMatrix.prototype.__draw =
       .enter().append("svg:g")
         .attr("class", "y axis")
         .attr("transform", function(d, i) { return "translate(0," + i * size + ")"; })
-        .each(function(d) { d3.select(this).call(y_axis.scale(y[d]).orient("right")); });
+        .each(function(d) {currentVariable=d; d3.select(this).call(y_axis.scale(y[d]).orient("right")); });
 
     // Draw scatter plot
     var cell = svg.selectAll("g.cell")

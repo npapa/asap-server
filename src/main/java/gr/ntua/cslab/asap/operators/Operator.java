@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,76 +27,91 @@ import java.util.logging.Logger;
 
 
 public class Operator {
-	public Model performanceModel;
+	public HashMap<String,Model> models;
+	public HashMap<String, String> inputSpace, outputSpace;
 	public SpecTree optree;
 	public String opName;
 	private static Logger logger = Logger.getLogger(Operator.class.getName());
+	private String directory;
 	
-	public Operator(String name) {
+	public Operator(String name, String directory) {
 		optree = new SpecTree();
 		opName = name;
+		models = new HashMap<String, Model>();
+		this.directory=directory;
 	}
 	
 
-	public void readModel(File file) throws Exception {
+	/*public void readModel(File file) throws Exception {
 		String modelClass = optree.getParameter("Optimization.model");
 		if(modelClass==null){
 			performanceModel = AbstractWekaModel.readFromFile(file.toString()+"/model");
 		}
-	}
+	}*/
 	
+	/**
+	 * @throws Exception
+	 */
 	public void configureModel() throws Exception {
-		String modelClass = optree.getParameter("Optimization.model");
-		//System.out.println(modelClass);
-		if(modelClass!=null){
-			performanceModel = (Model) Class.forName(modelClass).getConstructor().newInstance();
-		}
 
-		HashMap<String, String> inputSpace = new HashMap<String, String>();
+		inputSpace = new HashMap<String, String>();
 		optree.getNode("Optimization.inputSpace").toKeyValues("", inputSpace );
-		performanceModel.setInputSpace(inputSpace);
-		
-
-		HashMap<String, String> outputSpace = new HashMap<String, String>();
+		outputSpace = new HashMap<String, String>();
 		optree.getNode("Optimization.outputSpace").toKeyValues("", outputSpace );
-		performanceModel.setOutputSpace(outputSpace);
+		
+		for(Entry<String, String> e : outputSpace.entrySet()){
+			Model performanceModel=null;
+			String modelClass = optree.getParameter("Optimization.model."+e.getKey());
+			//System.out.println(e.getKey()+" class: "+modelClass);
+			if(modelClass.contains("AbstractWekaModel"))
+				performanceModel = AbstractWekaModel.readFromFile(directory+"/"+e.getKey()+".model");
+			else
+				performanceModel = (Model) Class.forName(modelClass).getConstructor().newInstance();
+			
+			performanceModel.setInputSpace(inputSpace);
+			HashMap<String, String> temp = new HashMap<String, String>();
+			temp.put(e.getKey(), e.getValue());
+			performanceModel.setOutputSpace(temp);
 
-		HashMap<String, String> conf = new HashMap<String, String>();
-		optree.getNode("Optimization").toKeyValues("", conf );
-		//System.out.println("sadfas: "+conf);
-		performanceModel.configureClassifier(conf);
+			HashMap<String, String> conf = new HashMap<String, String>();
+			optree.getNode("Optimization").toKeyValues("", conf );
+			//System.out.println("sadfas: "+conf);
+			performanceModel.configureClassifier(conf);
+			models.put(e.getKey(), performanceModel);
+		}
 	}
 
 
-	public void writeCSVfileUniformSampleOfModel(Double samplingRate, String filename, String delimiter, boolean addPredicted) throws Exception{
+	public void writeCSVfileUniformSampleOfModel(String variable, Double samplingRate, String filename, String delimiter, boolean addPredicted) throws Exception{
 
         File file = new File(filename);
     	FileOutputStream fos = new FileOutputStream(file);
     	 
     	BufferedWriter writter = new BufferedWriter(new OutputStreamWriter(fos));
-    	getUniformSampleOfModel(samplingRate, writter, delimiter, addPredicted);
+    	getUniformSampleOfModel(variable, samplingRate, writter, delimiter, addPredicted);
 
     	writter.close();
 		
 	}
 	
-	public void writeCSVfileUniformSampleOfModel(Double samplingRate, String filename, String delimiter) throws Exception{
+	public void writeCSVfileUniformSampleOfModel(String variable, Double samplingRate, String filename, String delimiter) throws Exception{
 
         File file = new File(filename);
     	FileOutputStream fos = new FileOutputStream(file);
     	 
     	BufferedWriter writter = new BufferedWriter(new OutputStreamWriter(fos));
-    	getUniformSampleOfModel(samplingRate, writter, delimiter, false);
+    	getUniformSampleOfModel(variable, samplingRate, writter, delimiter, false);
 
     	writter.close();
 	}
 	
-	protected void getUniformSampleOfModel(Double samplingRate, BufferedWriter writter, String delimiter, boolean addPredicted) throws Exception{
+	protected void getUniformSampleOfModel(String variable, Double samplingRate, BufferedWriter writter, String delimiter, boolean addPredicted) throws Exception{
 		
+		Model m = models.get(variable);
 		Sampler s = (Sampler) new UniformSampler();
         s.setSamplingRate(samplingRate);
     	HashMap<String, List<Double>> dim = new HashMap<String, List<Double>>();
-        for(Entry<String, String> e : performanceModel.getInputSpace().entrySet()){
+        for(Entry<String, String> e : m.getInputSpace().entrySet()){
             writter.append(e.getKey()+delimiter);
         	String[] limits = e.getValue().split(delimiter);
         	List<Double> l = new ArrayList<Double>();
@@ -118,10 +132,10 @@ public class Operator {
         	dim.put(e.getKey(), l);
         }
         int i=0;
-        for(String k : performanceModel.getOutputSpace().keySet()){
+        for(String k : m.getOutputSpace().keySet()){
             writter.append(k);
         	i++;
-        	if(i<performanceModel.getOutputSpace().size()){
+        	if(i<m.getOutputSpace().size()){
                 writter.append(delimiter);
         	}
         }
@@ -136,12 +150,12 @@ public class Operator {
             InputSpacePoint nextSample = s.next();
     		OutputSpacePoint op =  new 	OutputSpacePoint();
             HashMap<String, Double> values = new HashMap<String, Double>();
-            for(String k :  performanceModel.getOutputSpace().keySet()){
+            for(String k :  m.getOutputSpace().keySet()){
             	values.put(k, null);
             }
             op.setValues(values);
             //System.out.println(nextSample);
-            OutputSpacePoint res = performanceModel.getPoint(nextSample,op);
+            OutputSpacePoint res = m.getPoint(nextSample,op);
             //System.out.println(res);
             writter.append(res.toCSVString(delimiter));
             if(addPredicted){
@@ -169,17 +183,20 @@ public class Operator {
 		ret+=optree.toKeyValues("", ret,separator);
 		return ret;
 	}
-		
-	public void readFromFile(String filename) throws Exception{
-        File f = new File(filename+"/description");
+	
+	public void readFromDir() throws Exception{
+		//System.out.println("operator: "+opName);
+        File f = new File(directory+"/description");
 		InputStream stream = new FileInputStream(f);
-		readPropertiesFromFile(stream);
+		Properties props = new Properties();
+		props.load(stream);
+		for(Entry<Object, Object> e : props.entrySet()){
+			add((String)e.getKey(), (String)e.getValue());
+		}
 		stream.close();
-		this.performanceModel = AbstractWekaModel.readFromFile(filename+"/model");
-	}
-
-	public void readFromFile(File file) throws Exception{
-		readFromFile(file.toString());
+		configureModel();
+		
+		//this.performanceModel = AbstractWekaModel.readFromFile(directory+"/model");
 	}
 
 	public void readPropertiesFromFile(InputStream stream) throws IOException {
@@ -227,8 +244,9 @@ public class Operator {
         OutputStream out = new FileOutputStream( f );
         props.store(out,"");
         out.close();
-        
-        performanceModel.serialize(directory+"/model");
+        for(Entry<String, Model> e : models.entrySet()){
+        	e.getValue().serialize(directory+"/"+e.getKey()+".model");
+        }
 	}
 	
 	
@@ -297,46 +315,50 @@ public class Operator {
 
 
 	public static void main(String[] args) throws Exception {
-		Operator op = new Operator("HBase_HashJoin");
-		op.add("Constraints.Input.number","2");
-		op.add("Constraints.Output.number","1");
-		op.add("Constraints.Input0.DataInfo.Attributes.number","2");
-		op.add("Constraints.Input0.DataInfo.Attributes.Atr1.type","ByteWritable");
-		op.add("Constraints.Input0.DataInfo.Attributes.Atr2.type","List<ByteWritable>");
-		op.add("Constraints.Input0.Engine.DB.NoSQL.HBase.key","Atr1");
-		op.add("Constraints.Input0.Engine.DB.NoSQL.HBase.value","Atr2");
-		op.add("Constraints.Input0.Engine.DB.NoSQL.HBase.location","127.0.0.1");
+//		Operator op = new Operator("HBase_HashJoin");
+//		op.add("Constraints.Input.number","2");
+//		op.add("Constraints.Output.number","1");
+//		op.add("Constraints.Input0.DataInfo.Attributes.number","2");
+//		op.add("Constraints.Input0.DataInfo.Attributes.Atr1.type","ByteWritable");
+//		op.add("Constraints.Input0.DataInfo.Attributes.Atr2.type","List<ByteWritable>");
+//		op.add("Constraints.Input0.Engine.DB.NoSQL.HBase.key","Atr1");
+//		op.add("Constraints.Input0.Engine.DB.NoSQL.HBase.value","Atr2");
+//		op.add("Constraints.Input0.Engine.DB.NoSQL.HBase.location","127.0.0.1");
+//
+//		op.add("Constraints.Input1.DataInfo.Attributes.number","2");
+//		op.add("Constraints.Input1.DataInfo.Attributes.Atr1.type","ByteWritable");
+//		op.add("Constraints.Input1.DataInfo.Attributes.Atr2.type","List<ByteWritable>");
+//		op.add("Constraints.Input1.Engine.DB.NoSQL.HBase.key","Atr1");
+//		op.add("Constraints.Input1.Engine.DB.NoSQL.HBase.value","Atr2");
+//		op.add("Constraints.Input1.Engine.DB.NoSQL.HBase.location","127.0.0.1");
+//
+//		op.add("Constraints.Output0.DataInfo.Attributes.number","2");
+//		op.add("Constraints.Output0.DataInfo.Attributes.Atr1.type","ByteWritable");
+//		op.add("Constraints.Output0.DataInfo.Attributes.Atr2.type","List<ByteWritable>");
+//		op.add("Constraints.Output0.Engine.DB.NoSQL.HBase.key","Atr1");
+//		op.add("Constraints.Output0.Engine.DB.NoSQL.HBase.value","Atr2");
+//		op.add("Constraints.Output0.Engine.DB.NoSQL.HBase.location","127.0.0.1");
+//		
+//		op.add("Constraints.OpSpecification.Algorithm.Join.JoinCondition","in1.atr1 = in2.atr2");
+//		op.add("Constraints.OpSpecification.Algorithm.Join.type", "HashJoin");
+//
+//		op.add("Constraints.EngineSpecification.Distributed.MapReduce.masterLocation", "127.0.0.1");
+//
+//		op.add("Optimization.model", "gr.ntua.ece.cslab.panic.core.models.UserFunction");
+//		op.add("Optimization.inputSpace.In0.uniqueKeys", "Double,1.0,1E10,l");
+//		op.add("Optimization.inputSpace.In1.uniqueKeys", "Double,1.0,1E10,l");
+//		op.add("Optimization.inputSpace.cores", "Double,1.0,40.0,5.0");
+//		op.add("Optimization.outputSpace.execTime", "Double");
+//		op.add("Optimization.outputSpace.Out0.uniqueKeys", "Integer");
+//		op.add("Optimization.execTime", "100.0 + (In0.uniqueKeys + In1.uniqueKeys)/cores");
+//		op.add("Optimization.Out0.uniqueKeys", "In0.uniqueKeys + In1.uniqueKeys");
+		Operator op = new Operator("HBase_HashJoin","/Users/npapa/Documents/workspace/asap/asapLibrary/operators/Sort");
 
-		op.add("Constraints.Input1.DataInfo.Attributes.number","2");
-		op.add("Constraints.Input1.DataInfo.Attributes.Atr1.type","ByteWritable");
-		op.add("Constraints.Input1.DataInfo.Attributes.Atr2.type","List<ByteWritable>");
-		op.add("Constraints.Input1.Engine.DB.NoSQL.HBase.key","Atr1");
-		op.add("Constraints.Input1.Engine.DB.NoSQL.HBase.value","Atr2");
-		op.add("Constraints.Input1.Engine.DB.NoSQL.HBase.location","127.0.0.1");
-
-		op.add("Constraints.Output0.DataInfo.Attributes.number","2");
-		op.add("Constraints.Output0.DataInfo.Attributes.Atr1.type","ByteWritable");
-		op.add("Constraints.Output0.DataInfo.Attributes.Atr2.type","List<ByteWritable>");
-		op.add("Constraints.Output0.Engine.DB.NoSQL.HBase.key","Atr1");
-		op.add("Constraints.Output0.Engine.DB.NoSQL.HBase.value","Atr2");
-		op.add("Constraints.Output0.Engine.DB.NoSQL.HBase.location","127.0.0.1");
+		op.readFromDir();
+		op.writeCSVfileUniformSampleOfModel("Out0.size", 1.0, "test.csv", ",");
 		
-		op.add("Constraints.OpSpecification.Algorithm.Join.JoinCondition","in1.atr1 = in2.atr2");
-		op.add("Constraints.OpSpecification.Algorithm.Join.type", "HashJoin");
-
-		op.add("Constraints.EngineSpecification.Distributed.MapReduce.masterLocation", "127.0.0.1");
-
-		op.add("Optimization.model", "gr.ntua.ece.cslab.panic.core.models.UserFunction");
-		op.add("Optimization.inputSpace.In0.uniqueKeys", "Double,1.0,1E10,l");
-		op.add("Optimization.inputSpace.In1.uniqueKeys", "Double,1.0,1E10,l");
-		op.add("Optimization.inputSpace.cores", "Double,1.0,40.0,5.0");
-		op.add("Optimization.outputSpace.execTime", "Double");
-		op.add("Optimization.outputSpace.Out0.uniqueKeys", "Integer");
-		op.add("Optimization.execTime", "100.0 + (In0.uniqueKeys + In1.uniqueKeys)/cores");
-		op.add("Optimization.Out0.uniqueKeys", "In0.uniqueKeys + In1.uniqueKeys");
-		
-		op.configureModel();
-		op.writeCSVfileUniformSampleOfModel(0.2, "test.csv", ",");
+		//op.configureModel();
+		//op.writeCSVfileUniformSampleOfModel(0.2, "test.csv", ",");
 		
 		System.exit(0);
 		
@@ -368,7 +390,7 @@ public class Operator {
 		
 		System.out.println(op.toKeyValues("\n"));
 
-		Operator op1 = new Operator("HBase_HashJoin");
+		Operator op1 = new Operator("HBase_HashJoin", "/tmp");
 		op1.add("Constraints.Input1.DataInfo.Attributes.number","1");
 		op1.add("Constraints.Input1.DataInfo.Attributes.Atr1.type","ByteWritable");
 		op1.add("Constraints.Input1.DataInfo.Attributes.Atr2.type","List<ByteWritable>");

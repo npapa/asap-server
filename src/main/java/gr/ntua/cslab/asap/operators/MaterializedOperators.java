@@ -12,7 +12,7 @@ public class MaterializedOperators {
 	public MaterializedOperators() {
 		operators = new ArrayList<Operator>();
 
-		Operator op = new Operator("HBase_HashJoin");
+		Operator op = new Operator("HBase_HashJoin", "/tmp");
 		op.add("Constraints.Input.number","2");
 		op.add("Constraints.Output.number","1");
 		op.add("Constraints.Input0.DataInfo.Attributes.number","2");
@@ -43,7 +43,7 @@ public class MaterializedOperators {
 		op.add("Optimization.execTime", "100.0");
 		//op.add("Properties.MaintainTags", ".*");
 
-		Operator op1 = new Operator("Java_SortMergeJoin");
+		Operator op1 = new Operator("Java_SortMergeJoin", "/tmp");
 		op1.add("Constraints.Input.number","2");
 		op1.add("Constraints.Output.number","1");
 		op1.add("Constraints.Input0.DataInfo.Attributes.number","2");
@@ -73,7 +73,7 @@ public class MaterializedOperators {
 		op1.add("Constraints.EngineSpecification.Centralized.Java.location", "127.0.0.1");
 		op1.add("Optimization.execTime", "1000.0");
 		
-		Operator sort = new Operator("Sort");
+		Operator sort = new Operator("Sort", "/tmp");
 		sort.add("Constraints.Input.number","1");
 		sort.add("Constraints.Output.number","1");
 		sort.add("Constraints.Input0.DataInfo.Attributes.number","2");
@@ -96,7 +96,7 @@ public class MaterializedOperators {
 		sort.add("Optimization.execTime", "10.0");
 		
 
-		Operator sort2 = new Operator("Sort2");
+		Operator sort2 = new Operator("Sort2", "/tmp");
 		sort2.add("Constraints.Input.number","1");
 		sort2.add("Constraints.Output.number","1");
 		sort2.add("Constraints.Input0.DataInfo.Attributes.number","2");
@@ -118,7 +118,7 @@ public class MaterializedOperators {
 		sort2.add("Constraints.EngineSpecification.Distributed.MapReduce.masterLocation", "127.0.0.1");
 		sort2.add("Optimization.execTime", "100.0");
 
-		Operator move = new Operator("Move_MySQL_HBase");
+		Operator move = new Operator("Move_MySQL_HBase", "/tmp");
 		move.add("Constraints.Input.number","1");
 		move.add("Constraints.Output.number","1");
 		move.add("Constraints.Input0.DataInfo.Attributes.number","2");

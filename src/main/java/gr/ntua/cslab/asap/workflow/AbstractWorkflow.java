@@ -184,7 +184,7 @@ public class AbstractWorkflow {
 								
 									minDataset=tempInput;
 									minWorkflow=new Workflow();
-									Operator m = new Operator("move");
+									Operator m = new Operator("move","/tmp");
 									minWorkflow.addInputEdge(e.getKey(), m, 0);
 									minWorkflow.addOutputEdge(m, tempInput, 0);
 								//}

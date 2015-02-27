@@ -14,7 +14,15 @@ Constraints.Output0.DataInfo.Attributes.number=2
 Constraints.EngineSpecification.Distributed.MapReduce.masterLocation=127.0.0.1
 Constraints.Output.number=1
 Constraints.Input0.DataInfo.Attributes.number=2
-Optimization.execTime=100.0
 Constraints.Input.number=1
 Constraints.Input0.Engine.DB.NoSQL.HBase.key=Atr1
 Constraints.Input0.Engine.DB.NoSQL.HBase.location=127.0.0.1
+
+Optimization.model.execTime=gr.ntua.ece.cslab.panic.core.models.UserFunction
+Optimization.model.Out0.uniqueKeys=gr.ntua.ece.cslab.panic.core.models.UserFunction
+Optimization.inputSpace.In0.uniqueKeys=Double,1.0,1E10,l
+Optimization.outputSpace.execTime=Double
+Optimization.outputSpace.Out0.uniqueKeys=Integer
+Optimization.execTime=In0.uniqueKeys*log(In0.uniqueKeys)
+Optimization.Out0.uniqueKeys=In0.uniqueKeys
+

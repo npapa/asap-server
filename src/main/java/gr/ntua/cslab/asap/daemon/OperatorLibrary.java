@@ -38,9 +38,8 @@ public class OperatorLibrary {
 		for (int i = 0; i < listOfFiles.length; i++) {
 			if (listOfFiles[i].isDirectory()) {
 		        Logger.getLogger(OperatorLibrary.class.getName()).info("Loading operator: " + listOfFiles[i].getName());
-				Operator temp = new Operator(listOfFiles[i].getName());
-				temp.readFromFile(listOfFiles[i]);
-				temp.readModel(listOfFiles[i]);
+				Operator temp = new Operator(listOfFiles[i].getName(), listOfFiles[i].toString());
+				temp.readFromDir();
 				operators.put(temp.opName, temp);
 		    }
 		}
@@ -90,7 +89,7 @@ public class OperatorLibrary {
 	}
 
 	public static void addOperator(String opname, String opString) throws Exception {
-    	Operator o = new Operator(opname);
+    	Operator o = new Operator(opname,"asapLibrary/operators/"+opname);
     	InputStream is = new ByteArrayInputStream(opString.getBytes());
     	o.readPropertiesFromFile(is);
     	o.configureModel();
@@ -110,18 +109,18 @@ public class OperatorLibrary {
 		return operators.get(opname);
 	}
 
-	public static String getProfile(String opname) throws Exception {
+	public static String getProfile(String opname, String variable) throws Exception {
 		Operator op = operators.get(opname);
 		op.configureModel();
 		
 
 		File csv  = new File(operatorDirectory+"/"+op.opName+"/data.csv");
 		if(csv.exists()){
-			op.writeCSVfileUniformSampleOfModel(1.0, "www/test.csv", ",",true);
+			op.writeCSVfileUniformSampleOfModel(variable, 1.0, "www/test.csv", ",",true);
 			append("www/test.csv",operatorDirectory+"/"+op.opName+"/data.csv",",");
 		}
 		else{
-			op.writeCSVfileUniformSampleOfModel(1.0, "www/test.csv", ",",false);
+			op.writeCSVfileUniformSampleOfModel(variable, 1.0, "www/test.csv", ",",false);
 		}
 		//op.writeCSVfileUniformSampleOfModel(1.0, "www/test.csv", ",");
 		return "/test.csv";

@@ -122,8 +122,8 @@ public class MaterializedWorkflow1 {
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].isDirectory()) {
 				WorkflowNode n = new WorkflowNode(true, false);
-				Operator temp = new Operator(files[i].getName());
-				temp.readFromFile(files[i]);
+				Operator temp = new Operator(files[i].getName(),files[i].toString());
+				temp.readFromDir();
 				n.setOperator(temp);
 				nodes.put(temp.opName, n);
 			} 
