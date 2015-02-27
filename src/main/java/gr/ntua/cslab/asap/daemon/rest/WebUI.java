@@ -224,11 +224,11 @@ public class WebUI {
     @Path("/operators/{id}/")
     public String operatorDescription(@PathParam("id") String id) throws IOException {
     	String ret = header;
-    	ret+= "<h1>"+id+"</h1>";
+    	ret+= "<h1>"+id+"</h1><br>";
     	ret += "<form action=\"/web/operators/editOperator\" method=\"get\">"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\">"+OperatorLibrary.getOperatorDescription(id)+"</textarea>"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "<br><input class=\"styled-button\" type=\"submit\" value=\"Edit operator\"></form><br>";
+			+ "<input class=\"styled-button\" type=\"submit\" value=\"Edit operator\"></form><br>";
     	
     	ret+="<form action=\"/web/operators/operatorProfile\" method=\"get\">"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"

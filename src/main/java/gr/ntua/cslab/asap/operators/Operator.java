@@ -48,7 +48,7 @@ public class Operator {
 	
 	public void configureModel() throws Exception {
 		String modelClass = optree.getParameter("Optimization.model");
-		System.out.println(modelClass);
+		//System.out.println(modelClass);
 		if(modelClass!=null){
 			performanceModel = (Model) Class.forName(modelClass).getConstructor().newInstance();
 		}
@@ -64,7 +64,7 @@ public class Operator {
 
 		HashMap<String, String> conf = new HashMap<String, String>();
 		optree.getNode("Optimization").toKeyValues("", conf );
-		System.out.println("sadfas: "+conf);
+		//System.out.println("sadfas: "+conf);
 		performanceModel.configureClassifier(conf);
 	}
 
