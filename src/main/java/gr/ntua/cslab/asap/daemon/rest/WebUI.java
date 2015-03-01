@@ -225,15 +225,21 @@ public class WebUI {
     public String operatorDescription(@PathParam("id") String id) throws IOException {
     	String ret = header;
     	ret+= "<h1>"+id+"</h1><br>";
+    	ret+="<form action=\"/web/operators/operatorProfile\" method=\"get\">"
+    			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
+    			+ "Profile variable:<select name=\"variable\">";
+        	for(String outvar : OperatorLibrary.getOperator(id).outputSpace.keySet()){
+        		ret+= "<option value=\""+outvar+"\">"+outvar+"</option>";
+        	}
+    		ret+= "</select><br>"
+    			+ "<input class=\"styled-button\" type=\"submit\" value=\"View profile\"></form><br>";
+    		
     	ret += "<form action=\"/web/operators/editOperator\" method=\"get\">"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\">"+OperatorLibrary.getOperatorDescription(id)+"</textarea>"
 			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
 			+ "<input class=\"styled-button\" type=\"submit\" value=\"Edit operator\"></form><br>";
     	
-    	ret+="<form action=\"/web/operators/operatorProfile\" method=\"get\">"
-			+ "<input type=\"hidden\" name=\"opname\" value=\""+id+"\">"
-			+ "Profile variable: <input type=\"text\" name=\"variable\"><br>"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"View profile\"></form><br>";
+    	
     	//ret += "<p>"+OperatorLibrary.getOperatorDescription(id)+"</p>";
 
     	ret+="<form action=\"/web/operators/deleteOperator\" method=\"get\">"
@@ -251,6 +257,7 @@ public class WebUI {
     @Produces(MediaType.TEXT_HTML)
     public String operatorProfile(@QueryParam("opname") String opname,@QueryParam("variable") String variable) throws Exception {
     	String csv = OperatorLibrary.getProfile(opname, variable);
+    	//csv="/mahout_kmeans_synth.csv";
     	String ret = header + scatterPlot.replace("$$", csv)+ footer;
     	return ret;
     }

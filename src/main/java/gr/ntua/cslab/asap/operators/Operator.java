@@ -1,12 +1,17 @@
 package gr.ntua.cslab.asap.operators;
 
 import gr.ntua.cslab.asap.workflow.WorkflowNode;
+import gr.ntua.ece.cslab.panic.core.classifier.UserFunctionClassifier;
+import gr.ntua.ece.cslab.panic.core.client.Benchmark;
 import gr.ntua.ece.cslab.panic.core.containers.beans.InputSpacePoint;
 import gr.ntua.ece.cslab.panic.core.containers.beans.OutputSpacePoint;
 import gr.ntua.ece.cslab.panic.core.models.AbstractWekaModel;
+import gr.ntua.ece.cslab.panic.core.models.MLPerceptron;
 import gr.ntua.ece.cslab.panic.core.models.Model;
+import gr.ntua.ece.cslab.panic.core.models.UserFunction;
 import gr.ntua.ece.cslab.panic.core.samplers.Sampler;
 import gr.ntua.ece.cslab.panic.core.samplers.UniformSampler;
+import gr.ntua.ece.cslab.panic.core.utils.CSVFileManager;
 import net.sourceforge.jeval.EvaluationException;
 import net.sourceforge.jeval.Evaluator;
 
@@ -27,7 +32,7 @@ import java.util.logging.Logger;
 
 
 public class Operator {
-	public HashMap<String,Model> models;
+	public HashMap<String,List<Model>> models;
 	public HashMap<String, String> inputSpace, outputSpace;
 	public SpecTree optree;
 	public String opName;
@@ -37,7 +42,7 @@ public class Operator {
 	public Operator(String name, String directory) {
 		optree = new SpecTree();
 		opName = name;
-		models = new HashMap<String, Model>();
+		models = new HashMap<String, List<Model>>();
 		this.directory=directory;
 	}
 	
@@ -60,24 +65,69 @@ public class Operator {
 		optree.getNode("Optimization.outputSpace").toKeyValues("", outputSpace );
 		
 		for(Entry<String, String> e : outputSpace.entrySet()){
-			Model performanceModel=null;
+			List<Model> performanceModels = new ArrayList<Model>();
 			String modelClass = optree.getParameter("Optimization.model."+e.getKey());
 			//System.out.println(e.getKey()+" class: "+modelClass);
-			if(modelClass.contains("AbstractWekaModel"))
-				performanceModel = AbstractWekaModel.readFromFile(directory+"/"+e.getKey()+".model");
-			else
-				performanceModel = (Model) Class.forName(modelClass).getConstructor().newInstance();
-			
-			performanceModel.setInputSpace(inputSpace);
-			HashMap<String, String> temp = new HashMap<String, String>();
-			temp.put(e.getKey(), e.getValue());
-			performanceModel.setOutputSpace(temp);
+			if(modelClass.contains("AbstractWekaModel")){
+				String modelDir = directory+"/models";
+				File modelFile = new File(modelDir);
+				if(modelFile.exists()){
 
-			HashMap<String, String> conf = new HashMap<String, String>();
-			optree.getNode("Optimization").toKeyValues("", conf );
-			//System.out.println("sadfas: "+conf);
-			performanceModel.configureClassifier(conf);
-			models.put(e.getKey(), performanceModel);
+					File[] listOfFiles = modelFile.listFiles();
+
+					for (int i = 0; i < listOfFiles.length; i++) {
+						if (listOfFiles[i].toString().endsWith(".model")) {
+							//System.out.println("Reading: "+listOfFiles[i].getAbsolutePath());
+							performanceModels.add(AbstractWekaModel.readFromFile(listOfFiles[i].getAbsolutePath()));
+						}
+					}
+				}
+				else{
+					int i=0;
+					for (Class<? extends Model> c : Benchmark.discoverModels()) {
+						if(c.equals(UserFunction.class))
+							continue;
+						//System.out.println(c);
+	                	Model model = (Model) c.getConstructor().newInstance();
+						Sampler s = (Sampler) new UniformSampler();
+						CSVFileManager file = new CSVFileManager();
+			            file.setFilename(directory+"/data.csv");
+	
+			            // samplers initialization
+			            s.setSamplingRate(0.4);
+			            //System.out.println(file.getDimensionRanges());
+			            s.setDimensionsWithRanges(file.getDimensionRanges());
+	
+			            s.configureSampler();
+			            while (s.hasMore()) {
+			                InputSpacePoint nextSample = s.next();
+			                OutputSpacePoint out = file.getActualValue(nextSample);
+			                //System.out.println(out);
+			                model.feed(out, false);
+			            }
+			            model.train();
+			            model.serialize(modelDir+"/"+e.getKey()+"_"+i+".model");
+			            i++;
+			            performanceModels.add(model);
+		            }
+				}
+			}
+			else{
+				performanceModels.add((Model) Class.forName(modelClass).getConstructor().newInstance());
+			}
+			
+			for(Model performanceModel : performanceModels){
+				performanceModel.setInputSpace(inputSpace);
+				HashMap<String, String> temp = new HashMap<String, String>();
+				temp.put(e.getKey(), e.getValue());
+				performanceModel.setOutputSpace(temp);
+	
+				HashMap<String, String> conf = new HashMap<String, String>();
+				optree.getNode("Optimization").toKeyValues("", conf );
+				//System.out.println("sadfas: "+conf);
+				performanceModel.configureClassifier(conf);
+			}
+			models.put(e.getKey(), performanceModels);
 		}
 	}
 
@@ -107,11 +157,10 @@ public class Operator {
 	
 	protected void getUniformSampleOfModel(String variable, Double samplingRate, BufferedWriter writter, String delimiter, boolean addPredicted) throws Exception{
 		
-		Model m = models.get(variable);
-		Sampler s = (Sampler) new UniformSampler();
-        s.setSamplingRate(samplingRate);
+		List<Model> lm = models.get(variable);
+		Model m1 = lm.get(0); 
     	HashMap<String, List<Double>> dim = new HashMap<String, List<Double>>();
-        for(Entry<String, String> e : m.getInputSpace().entrySet()){
+        for(Entry<String, String> e : m1.getInputSpace().entrySet()){
             writter.append(e.getKey()+delimiter);
         	String[] limits = e.getValue().split(delimiter);
         	List<Double> l = new ArrayList<Double>();
@@ -132,37 +181,42 @@ public class Operator {
         	dim.put(e.getKey(), l);
         }
         int i=0;
-        for(String k : m.getOutputSpace().keySet()){
+        for(String k : m1.getOutputSpace().keySet()){
             writter.append(k);
         	i++;
-        	if(i<m.getOutputSpace().size()){
+        	if(i<m1.getOutputSpace().size()){
                 writter.append(delimiter);
         	}
         }
         if(addPredicted){
-            writter.append(delimiter+"prediction");
+            writter.append(delimiter+"model");
         }
         writter.newLine();
-        //System.out.println(dim);
-		s.setDimensionsWithRanges(dim);
-        s.configureSampler();
-        while (s.hasMore()) {
-            InputSpacePoint nextSample = s.next();
-    		OutputSpacePoint op =  new 	OutputSpacePoint();
-            HashMap<String, Double> values = new HashMap<String, Double>();
-            for(String k :  m.getOutputSpace().keySet()){
-            	values.put(k, null);
-            }
-            op.setValues(values);
-            //System.out.println(nextSample);
-            OutputSpacePoint res = m.getPoint(nextSample,op);
-            //System.out.println(res);
-            writter.append(res.toCSVString(delimiter));
-            if(addPredicted){
-                writter.append(delimiter+"true");
-            }
-            writter.newLine();
-        }
+
+		for(Model m : lm){
+	        //System.out.println(dim);
+			Sampler s = (Sampler) new UniformSampler();
+	        s.setSamplingRate(samplingRate);
+			s.setDimensionsWithRanges(dim);
+	        s.configureSampler();
+	        while (s.hasMore()) {
+	            InputSpacePoint nextSample = s.next();
+	    		OutputSpacePoint op =  new 	OutputSpacePoint();
+	            HashMap<String, Double> values = new HashMap<String, Double>();
+	            for(String k :  m.getOutputSpace().keySet()){
+	            	values.put(k, null);
+	            }
+	            op.setValues(values);
+	            //System.out.println(nextSample);
+	            OutputSpacePoint res = m.getPoint(nextSample,op);
+	            //System.out.println(res);
+	            writter.append(res.toCSVString(delimiter));
+	            if(addPredicted){
+	                writter.append(delimiter+m.getClass().getSimpleName());
+	            }
+	            writter.newLine();
+	        }
+		}
         
 	}
 	
@@ -244,8 +298,12 @@ public class Operator {
         OutputStream out = new FileOutputStream( f );
         props.store(out,"");
         out.close();
-        for(Entry<String, Model> e : models.entrySet()){
-        	e.getValue().serialize(directory+"/"+e.getKey()+".model");
+        for(Entry<String, List<Model>> e : models.entrySet()){
+        	int i =0;
+        	for(Model m : e.getValue()){
+        		m.serialize(directory+"/"+e.getKey()+"_"+i+".model");
+        		i++;
+        	}
         }
 	}
 	

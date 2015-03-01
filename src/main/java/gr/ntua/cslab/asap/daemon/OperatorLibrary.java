@@ -138,7 +138,7 @@ public class OperatorLibrary {
         String line = br.readLine();
         line = br.readLine();
         while (line != null) {
-            out.append(line+delimiter+"false");
+            out.append(line+delimiter+"Samples");
             out.append(System.lineSeparator());
             line = br.readLine();
         }
