@@ -50,7 +50,7 @@ public class AbstractWorkflowLibrary {
 		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
 		DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss");
 		Date date = new Date();
-		MaterializedWorkflow1 mw = aw.materialize(dateFormat.format(date));
+		MaterializedWorkflow1 mw = aw.materialize("execTime", dateFormat.format(date));
 		MaterializedWorkflowLibrary.add(mw);
 		return mw.name;
 	}

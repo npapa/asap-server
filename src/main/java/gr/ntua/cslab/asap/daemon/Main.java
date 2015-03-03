@@ -1,7 +1,6 @@
 package gr.ntua.cslab.asap.daemon;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
-import com.sun.xml.internal.bind.CycleRecoverable.Context;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.util.logging.Logger;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.apache.log4j.PropertyConfigurator;

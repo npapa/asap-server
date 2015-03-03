@@ -59,12 +59,12 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 	}
 
 
-	public List<WorkflowNode> materialize(MaterializedWorkflow1 materializedWorkflow, Workflow1DPTable dpTable) throws NumberFormatException, EvaluationException {
+	public List<WorkflowNode> materialize(String metric, MaterializedWorkflow1 materializedWorkflow, Workflow1DPTable dpTable) throws Exception {
 		logger.info("Processing : "+toStringNorecursive());
 		List<WorkflowNode> ret = new ArrayList<WorkflowNode>();
 		List<List<WorkflowNode>> materializedInputs = new ArrayList<List<WorkflowNode>>();
 		for(WorkflowNode in : inputs){
-			List<WorkflowNode> l = in.materialize(materializedWorkflow,dpTable);
+			List<WorkflowNode> l = in.materialize(metric, materializedWorkflow,dpTable);
 			materializedInputs.add(l);
 		}
 		logger.info(materializedInputs);
@@ -115,7 +115,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 										moveNode.setOperator(m);
 										moveNode.addInput(in);
 										tempInputNode.addInput(moveNode);
-										moveNode.setOptimalCost(m.getCost(moveNode.inputs));
+										moveNode.setOptimalCost(m.getMettric(metric, moveNode.inputs));
 										Double tempCost = dpTable.getCost(in.dataset)+moveNode.getCost();
 										if(tempCost<operatorOneInputCost){
 											operatorOneInputCost=tempCost;
@@ -160,7 +160,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						tempOutputNode.addInput(temp);
 						ret.add(tempOutputNode);
 						
-						temp.setOptimalCost(op.getCost(bestInputs));
+						temp.setOptimalCost(op.getMettric(metric, bestInputs));
 						plan.add(temp);
 						plan.add(tempOutputNode);
 						dpTable.addRecord(tempOutput, plan, operatorInputCost+temp.getCost());

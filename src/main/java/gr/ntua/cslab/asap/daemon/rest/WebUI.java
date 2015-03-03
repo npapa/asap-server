@@ -267,8 +267,7 @@ public class WebUI {
     @Produces(MediaType.TEXT_HTML)
     public String editOperator(@QueryParam("opname") String opname,@QueryParam("opString") String opString) throws Exception {
     	String ret = header;
-    	OperatorLibrary.deleteOperator(opname);
-    	OperatorLibrary.addOperator(opname, opString);
+    	OperatorLibrary.editOperator(opname, opString);
     	List<String> l = OperatorLibrary.getOperators();
     	ret += "<ul>";
     	for(String op : l){

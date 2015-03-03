@@ -20,6 +20,6 @@ Optimization.model.Out0.uniqueKeys=gr.ntua.ece.cslab.panic.core.models.UserFunct
 Optimization.inputSpace.In0.uniqueKeys=Double,1.0,1E10,l
 Optimization.outputSpace.execTime=Double
 Optimization.outputSpace.Out0.uniqueKeys=Integer
-Optimization.execTime=log(In0.uniqueKeys)
+Optimization.execTime=In0.uniqueKeys
 Optimization.Out0.uniqueKeys=In0.uniqueKeys
 

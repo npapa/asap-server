@@ -1,5 +1,6 @@
 package gr.ntua.cslab.asap.operators;
 
+import gr.ntua.cslab.asap.utils.Utils;
 import gr.ntua.cslab.asap.workflow.WorkflowNode;
 import gr.ntua.ece.cslab.panic.core.classifier.UserFunctionClassifier;
 import gr.ntua.ece.cslab.panic.core.client.Benchmark;
@@ -83,6 +84,7 @@ public class Operator {
 					}
 				}
 				else{
+					modelFile.mkdir();
 					int i=0;
 					for (Class<? extends Model> c : Benchmark.discoverModels()) {
 						if(c.equals(UserFunction.class))
@@ -91,7 +93,7 @@ public class Operator {
 	                	Model model = (Model) c.getConstructor().newInstance();
 						Sampler s = (Sampler) new UniformSampler();
 						CSVFileManager file = new CSVFileManager();
-			            file.setFilename(directory+"/data.csv");
+			            file.setFilename(directory+"/data/"+e.getKey()+".csv");
 	
 			            // samplers initialization
 			            s.setSamplingRate(0.4);
@@ -253,7 +255,7 @@ public class Operator {
 		//this.performanceModel = AbstractWekaModel.readFromFile(directory+"/model");
 	}
 
-	public void readPropertiesFromFile(InputStream stream) throws IOException {
+	public void readPropertiesFromStream(InputStream stream) throws IOException {
 		Properties props = new Properties();
 		props.load(stream);
 		for(Entry<Object, Object> e : props.entrySet()){
@@ -284,10 +286,9 @@ public class Operator {
 	
 	public void writeToPropertiesFile(String directory) throws Exception {
         File dir = new File(directory);
-        if (dir.exists()) {
-        	dir.delete();
+        if (!dir.exists()) {
+            dir.mkdir();
         }
-        dir.mkdir();
         Properties props = new Properties();
 		optree.writeToPropertiesFile("", props);
         File f = new File(directory+"/description");
@@ -298,15 +299,92 @@ public class Operator {
         OutputStream out = new FileOutputStream( f );
         props.store(out,"");
         out.close();
+        writeModels(directory);
+	}
+
+	public void writeDescriptionToPropertiesFile(String directory) throws Exception {
+        File dir = new File(directory);
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        Properties props = new Properties();
+		optree.writeToPropertiesFile("", props);
+        File f = new File(directory+"/description");
+        if (f.exists()) {
+        	f.delete();
+        }
+    	f.createNewFile();
+        OutputStream out = new FileOutputStream( f );
+        props.store(out,"");
+        out.close();
+	}
+	
+	public void writeModels(String directory) throws Exception {
+        File mdir = new File(directory+"/models");
+        if (mdir.exists()) {
+            mdir.delete();
+        }
+        mdir.mkdir();
         for(Entry<String, List<Model>> e : models.entrySet()){
         	int i =0;
         	for(Model m : e.getValue()){
-        		m.serialize(directory+"/"+e.getKey()+"_"+i+".model");
+        		if(m.getClass().equals(UserFunction.class))
+        			continue;
+        		m.serialize(directory+"/models/"+e.getKey()+"_"+i+".model");
         		i++;
         	}
         }
 	}
 	
+	
+	public Double getMettric(String metric, List<WorkflowNode> inputs) throws Exception{
+
+		Model model = models.get(metric).get(0);
+		//System.out.println(opName);
+		//System.out.println("inputs: "+inputs);
+
+        InputSpacePoint in = new InputSpacePoint();
+        HashMap<String, Double> values = new HashMap<String, Double>();
+    	for(String inVar : model.getInputSpace().keySet()){
+    		//System.out.println("var: "+inVar);
+    		String[] s = inVar.split("\\.");
+    		if(s[0].startsWith("In")){
+    			int index = Integer.parseInt(s[0].substring((s[0].length()-1)));
+    			//System.out.println("data index "+ index);
+	    		String val = null;
+	    		WorkflowNode n = inputs.get(index);
+	    		if(n.isOperator)
+	    			val=n.inputs.get(0).dataset.getParameter("Optimization."+s[1]);
+	    		else
+	    			val = n.dataset.getParameter("Optimization."+s[1]);
+	    		if(val==null){
+	    			val ="10.0";
+	    		}
+	    		Double v = Double.parseDouble(val);
+    			//System.out.println("in value "+ v);
+    			values.put(inVar, v);			
+    		}
+    		else{
+    			//System.out.println("in value "+ 2.0);
+    			values.put(inVar, 2.0);			
+    			
+    		}
+    	}
+    	in.setValues(values);
+        
+		OutputSpacePoint op =  new 	OutputSpacePoint();
+        values = new HashMap<String, Double>();
+        for(String k :  model.getOutputSpace().keySet()){
+        	values.put(k, null);
+        }
+        op.setValues(values);
+        //System.out.println(in);
+        OutputSpacePoint res = model.getPoint(in,op);
+        //System.out.println(res);
+        //System.out.println("return: " + res.getOutputPoints().get(metric));
+        return res.getOutputPoints().get(metric);
+		
+	}
 	
 	public Double getCost(List<WorkflowNode> inputs) throws NumberFormatException, EvaluationException {
 
@@ -368,6 +446,11 @@ public class Operator {
 		return optree.getParameter(key);
 	}
 
+
+	public void deleteDiskData() {
+		File file = new File(directory);
+		Utils.deleteDirectory(file);
+	}
 
 
 
@@ -494,6 +577,7 @@ public class Operator {
 		long stop = System.currentTimeMillis();
 		System.out.println("Time (s): "+((double)(stop-start))/1000.0);
 	}
+
 
 
 

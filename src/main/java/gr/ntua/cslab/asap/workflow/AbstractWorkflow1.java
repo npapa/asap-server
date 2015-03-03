@@ -59,12 +59,12 @@ public class AbstractWorkflow1 {
 		return targets;
 	}
 
-	public MaterializedWorkflow1 materialize(String nameExtention) throws NumberFormatException, EvaluationException {
+	public MaterializedWorkflow1 materialize(String metric, String nameExtention) throws Exception {
 		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1(name+"_"+nameExtention);
 
 		Workflow1DPTable dpTable = new Workflow1DPTable();
 		for(WorkflowNode t : targets){
-			List<WorkflowNode> l = t.materialize(materializedWorkflow,dpTable);
+			List<WorkflowNode> l = t.materialize(metric, materializedWorkflow,dpTable);
 			WorkflowNode temp = new WorkflowNode(false, false);
 			temp.setDataset(t.dataset);
 			//System.out.println(l+"fsdgd");
@@ -399,7 +399,7 @@ public class AbstractWorkflow1 {
 
 		abstractWorkflow.writeToDir("asapLibrary/abstractWorkflows/DataAnalytics");
 		System.exit(0);
-		MaterializedWorkflow1 mw = abstractWorkflow.materialize("t");
+		MaterializedWorkflow1 mw = abstractWorkflow.materialize("execTime", "t");
 		System.out.println(abstractWorkflow);
 		System.out.println(mw);
 		mw.printNodes();
