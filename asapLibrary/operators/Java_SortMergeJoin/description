@@ -30,4 +30,7 @@ Optimization.outputSpace.execTime=Double
 Optimization.outputSpace.Out0.uniqueKeys=Integer
 Optimization.execTime=1000.0 
 Optimization.Out0.uniqueKeys=In0.uniqueKeys + In1.uniqueKeys
+Optimization.outputSpace.cost=Double
+Optimization.cost=100.0
+Optimization.model.cost=gr.ntua.ece.cslab.panic.core.models.UserFunction
 

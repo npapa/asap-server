@@ -25,4 +25,7 @@ Optimization.outputSpace.Out0.uniqueKeys=Double
 Optimization.Out0.uniqueKeys=In0.uniqueKeys
 Optimization.model.Out0.uniqueKeys=gr.ntua.ece.cslab.panic.core.models.UserFunction
 Optimization.model.execTime=gr.ntua.ece.cslab.panic.core.models.AbstractWekaModel
+Optimization.outputSpace.cost=Double
+Optimization.cost=100.0
+Optimization.model.cost=gr.ntua.ece.cslab.panic.core.models.UserFunction
 

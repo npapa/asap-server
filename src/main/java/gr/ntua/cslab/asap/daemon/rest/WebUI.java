@@ -232,7 +232,9 @@ public class WebUI {
         		ret+= "<option value=\""+outvar+"\">"+outvar+"</option>";
         	}
     		ret+= "</select><br>"
-    			+ "<input class=\"styled-button\" type=\"submit\" value=\"View profile\"></form><br>";
+        		+ "<input class=\"styled-button\" type=\"submit\" name=\"profileType\" value=\"Compare models\">"
+        		+ "<input class=\"styled-button\" type=\"submit\" name=\"profileType\" value=\"View model\">"
+    			+ "<input class=\"styled-button\" type=\"submit\" name=\"profileType\" value=\"View samples\"></form><br>";
     		
     	ret += "<form action=\"/web/operators/editOperator\" method=\"get\">"
 			+ "<textarea rows=\"40\" cols=\"150\" name=\"opString\">"+OperatorLibrary.getOperatorDescription(id)+"</textarea>"
@@ -255,8 +257,8 @@ public class WebUI {
     @GET
     @Path("/operators/operatorProfile/")
     @Produces(MediaType.TEXT_HTML)
-    public String operatorProfile(@QueryParam("opname") String opname,@QueryParam("variable") String variable) throws Exception {
-    	String csv = OperatorLibrary.getProfile(opname, variable);
+    public String operatorProfile(@QueryParam("opname") String opname,@QueryParam("variable") String variable, @QueryParam("profileType") String profileType) throws Exception {
+    	String csv = OperatorLibrary.getProfile(opname, variable,profileType);
     	//csv="/mahout_kmeans_synth.csv";
     	String ret = header + scatterPlot.replace("$$", csv)+ footer;
     	return ret;
@@ -459,9 +461,14 @@ public class WebUI {
     @Produces(MediaType.TEXT_HTML)
     @Path("/workflows/{id}/")
     public String workflowDescription(@PathParam("id") String id) throws IOException {
-    	String ret = header+workflowUp+"/workflows/"+id+workflowLow;
+
+    	String ret = header+"Optimal cost: "+MaterializedWorkflowLibrary.get(id).optimalCost;
+    	ret+="</div><div  class=\"mainpage\">";
+    	
+    	ret+=workflowUp+"/workflows/"+id+workflowLow;
+    	
     	ret += footer;
-        return ret;
+    	return ret;
     }
     
     @GET
@@ -513,8 +520,9 @@ public class WebUI {
     	ret+="</div>";
 
     	ret+="<div  class=\"mainpage\"><p><form action=\"/web/abstractWorkflows/materialize\" method=\"get\">"
-			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\">"
-			+ "<input class=\"styled-button\" type=\"submit\" value=\"Materialize Workflow\"></form></p>";
+			+ "Policy: <p><input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\">"
+			+ "<textarea rows=\"4\" cols=\"80\" name=\"policy\">"+defaultPolicy()+"</textarea></p>"
+			+ "<p><input class=\"styled-button\" type=\"submit\" value=\"Materialize Workflow\"></form></p>";
     	
     	ret+="<p><form action=\"/web/abstractWorkflows/addNode\" method=\"get\">"
     			+ "Comma separated list: <textarea rows=\"1\" cols=\"80\" name=\"name\"></textarea><br>"
@@ -534,7 +542,15 @@ public class WebUI {
     	ret += footer;
     	return ret;
     }
-
+    
+    protected String defaultPolicy() {
+    	String ret ="metrics,cost,execTime\n";
+    	ret+="groupInputs,execTime,max\n";
+    	ret+="groupInputs,cost,sum\n";
+    	ret+="function,2*cost+3*execTime,min";
+    	return ret;
+	}
+    
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Path("/abstractWorkflows/newWorkflow/")
@@ -582,9 +598,14 @@ public class WebUI {
     @GET
     @Path("/abstractWorkflows/materialize/")
     @Produces(MediaType.TEXT_HTML)
-    public String materializeAbstractWorkflow(
-            @QueryParam("workflowName") String workflowName) throws Exception{
-    	String ret = header+workflowUp+"/workflows/"+AbstractWorkflowLibrary.getMaterializedWorkflow(workflowName)+workflowLow;
+    public String materializeAbstractWorkflow(@QueryParam("workflowName") String workflowName,
+    		@QueryParam("policy") String policy) throws Exception{
+    	String mw = AbstractWorkflowLibrary.getMaterializedWorkflow(workflowName,policy);
+    	String ret = header+"Optimal cost: "+MaterializedWorkflowLibrary.get(mw).optimalCost;
+    	ret+="</div><div  class=\"mainpage\">";
+    	
+    	ret+=workflowUp+"/workflows/"+mw+workflowLow;
+    	
     	ret += footer;
     	return ret;
     }

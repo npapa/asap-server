@@ -11,14 +11,19 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import net.sourceforge.jeval.EvaluationException;
 import net.sourceforge.jeval.Evaluator;
 
 import org.apache.log4j.Logger;
+
+import weka.core.Attribute;
 
 public class WorkflowNode implements Comparable<WorkflowNode>{
 	private boolean visited;
@@ -60,6 +65,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 
 
 	public List<WorkflowNode> materialize(String metric, MaterializedWorkflow1 materializedWorkflow, Workflow1DPTable dpTable) throws Exception {
+		
 		logger.info("Processing : "+toStringNorecursive());
 		List<WorkflowNode> ret = new ArrayList<WorkflowNode>();
 		List<List<WorkflowNode>> materializedInputs = new ArrayList<List<WorkflowNode>>();
@@ -72,7 +78,8 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 			if(isAbstract){
 				List<Operator> operators = OperatorLibrary.getMatches(abstractOperator);
 				for(Operator op : operators){
-					Double operatorInputCost= 0.0;
+					List<HashMap<String,Double>> minCostsForInput = new ArrayList<HashMap<String,Double>>();
+					//Double operatorInputCost= 0.0;
 					List<WorkflowNode> plan = new ArrayList<WorkflowNode>();
 					logger.info("Materialized operator: "+op.opName);
 					WorkflowNode temp = new WorkflowNode(true, false);
@@ -90,7 +97,14 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						
 
 						boolean inputMatches=false;
-						Double operatorOneInputCost= Double.MAX_VALUE;
+						Double operatorOneInputCost=0.0;
+						if(materializedWorkflow.functionTarget.contains("min")){
+							operatorOneInputCost= Double.MAX_VALUE;
+						}
+						else if(materializedWorkflow.functionTarget.contains("max")){
+							operatorOneInputCost = -Double.MAX_VALUE;
+						}
+						HashMap<String,Double> oneInputMetrics = null;
 						WorkflowNode bestInput = null;
 						for(WorkflowNode in : materializedInputs.get(i)){
 							logger.info("Checking: "+in.dataset.datasetName);
@@ -98,8 +112,14 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 								logger.info("true");
 								inputMatches=true;
 								tempInputNode.addInput(in);
-								if(dpTable.getCost(in.dataset)<operatorOneInputCost){
+								if(materializedWorkflow.functionTarget.contains("min") && dpTable.getCost(in.dataset)<operatorOneInputCost){
 									operatorOneInputCost=dpTable.getCost(in.dataset);
+									oneInputMetrics = dpTable.getMetrics(in.dataset);
+									bestInput = in;
+								}
+								if(materializedWorkflow.functionTarget.contains("max") && dpTable.getCost(in.dataset)>operatorOneInputCost){
+									operatorOneInputCost=dpTable.getCost(in.dataset);
+									oneInputMetrics = dpTable.getMetrics(in.dataset);
 									bestInput = in;
 								}
 							}
@@ -117,11 +137,26 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 										tempInputNode.addInput(moveNode);
 										moveNode.setOptimalCost(m.getMettric(metric, moveNode.inputs));
 										Double tempCost = dpTable.getCost(in.dataset)+moveNode.getCost();
-										if(tempCost<operatorOneInputCost){
+										
+										if(materializedWorkflow.functionTarget.contains("min") && tempCost<operatorOneInputCost){
 											operatorOneInputCost=tempCost;
+											HashMap<String, Double> prevMetrics = dpTable.getMetrics(in.dataset);
+											oneInputMetrics = new HashMap<String, Double>();
+											for(Entry<String, Double> e : prevMetrics.entrySet()){
+												oneInputMetrics.put(e.getKey(), e.getValue()+m.getMettric(e.getKey(), moveNode.inputs));
+											}
 											bestInput=moveNode;
 										}
-										
+
+										if(materializedWorkflow.functionTarget.contains("max") && tempCost>operatorOneInputCost){
+											operatorOneInputCost=tempCost;
+											HashMap<String, Double> prevMetrics = dpTable.getMetrics(in.dataset);
+											oneInputMetrics = new HashMap<String, Double>();
+											for(Entry<String, Double> e : prevMetrics.entrySet()){
+												oneInputMetrics.put(e.getKey(), e.getValue()+m.getMettric(e.getKey(), moveNode.inputs));
+											}
+											bestInput=moveNode;
+										}
 									}
 									
 								}
@@ -135,9 +170,11 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						}
 						//System.out.println(materializedInputs.get(i)+"fb");
 						//tempInputNode.addInputs(materializedInputs.get(i));
-						if(operatorOneInputCost>operatorInputCost){
+						minCostsForInput.add(oneInputMetrics);
+						//System.out.println(bestInput+ "cost: "+operatorOneInputCost);
+						/*if(operatorOneInputCost>operatorInputCost){
 							operatorInputCost=operatorOneInputCost;
-						}
+						}*/
 						bestInputs.add(bestInput);
 						if(bestInput.isOperator){
 							//move
@@ -163,7 +200,34 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 						temp.setOptimalCost(op.getMettric(metric, bestInputs));
 						plan.add(temp);
 						plan.add(tempOutputNode);
-						dpTable.addRecord(tempOutput, plan, operatorInputCost+temp.getCost());
+						
+						HashMap<String,Double> nextMetrics = new HashMap<String, Double>();
+						for(String m : minCostsForInput.get(0).keySet()){
+							List<Double> t1 = new ArrayList<Double>();
+							for(HashMap<String, Double> h : minCostsForInput){
+								t1.add(h.get(m));
+							}
+							Collections.sort(t1);
+							//System.out.println(m+": "+t1);
+							//System.out.println(minCostsForInput);
+							String g = materializedWorkflow.groupInputs.get(m);
+							//System.out.println(g);
+							Double operatorInputCost=0.0;
+							if(g.contains("min")){
+								operatorInputCost=t1.get(0);
+							}
+							else if(g.contains("max")){
+								operatorInputCost=t1.get(t1.size()-1);
+							}
+							else if(g.contains("sum")){
+								for(Double d : t1){
+									operatorInputCost+=d;
+								}
+							}
+							nextMetrics.put(m, operatorInputCost+op.getMettric(m, bestInputs));
+						}
+						//System.out.println(nextMetrics);
+						dpTable.addRecord(tempOutput, plan, computePolicyFunction(nextMetrics, materializedWorkflow.function), nextMetrics);
 					}
 				}
 			}
@@ -194,7 +258,12 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 				
 				List<WorkflowNode> plan = new ArrayList<WorkflowNode>();
 				plan.add(temp);
-				dpTable.addRecord(dataset, plan, 0.0);
+				HashMap<String,Double> metrics = new HashMap<String, Double>();
+				for(String m : materializedWorkflow.groupInputs.keySet()){
+					metrics.put(m, 0.0);
+				}
+				
+				dpTable.addRecord(dataset, plan, computePolicyFunction(metrics, materializedWorkflow.function),metrics);
 				
 			}			
 		}
@@ -202,7 +271,19 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		return ret;
 	}
 	
-	
+	protected Double computePolicyFunction(HashMap<String,Double> metrics, String function) throws NumberFormatException, EvaluationException {
+		//System.out.println("Computing function "+ metrics);
+
+		Evaluator evaluator = new Evaluator();
+		Double res=0.0;
+		String tempFunction = new String(function);
+		for(String m : metrics.keySet()){
+			tempFunction=tempFunction.replace(m, metrics.get(m)+"");
+		}
+    	res = Double.parseDouble(evaluator.evaluate(tempFunction));
+		//System.out.println(res);
+		return res;
+	}
 	
 	@Override
 	public int compareTo(WorkflowNode o) {
@@ -335,7 +416,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 	
 	public void toWorkflowDictionary(WorkflowDictionary ret, HashMap<String, List<WorkflowNode>> bestPlans) throws NumberFormatException, EvaluationException {
 		if(!visited){
-			OperatorDictionary op= new OperatorDictionary(toStringNorecursive(), getCost()+"", getStatus(bestPlans), isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
+			OperatorDictionary op= new OperatorDictionary(toStringNorecursive(), String.format( "%.2f", getCost() ), getStatus(bestPlans), isOperator+"", toStringNorecursive()+"\n"+toKeyValueString());
 			
 			for(WorkflowNode n : inputs){
 				op.addInput(n.toStringNorecursive());

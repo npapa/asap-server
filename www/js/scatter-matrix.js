@@ -276,7 +276,10 @@ ScatterMatrix.prototype.__draw =
     // variable becomes the x-axis variable for all columns, and each column
     // contains only data points that match specific values for each of the
     // drilled variables other than the first.
-
+	function sortNumber(a,b) {
+    	return a - b;
+	}
+	
     var drill_values = [];
     var drill_degrees = []
     drill_variables.forEach(function(variable) {
@@ -291,7 +294,8 @@ ScatterMatrix.prototype.__draw =
           var v = d[variable];
           if (v !== undefined && values.indexOf(v) < 0) { values.push(v); }
         });
-        values.sort();
+        values.sort(sortNumber);
+        //console.log(values);
         drill_values.push(values);
         drill_degrees.push(values.length);
       }
@@ -487,7 +491,6 @@ ScatterMatrix.prototype.__draw =
           if (pass === true) { data_to_draw.push(d); }
         });
       }
-
       var cell = d3.select(this);
 
       // Frame

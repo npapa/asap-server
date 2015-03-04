@@ -96,7 +96,7 @@ public class Operator {
 			            file.setFilename(directory+"/data/"+e.getKey()+".csv");
 	
 			            // samplers initialization
-			            s.setSamplingRate(0.4);
+			            s.setSamplingRate(0.8);
 			            //System.out.println(file.getDimensionRanges());
 			            s.setDimensionsWithRanges(file.getDimensionRanges());
 	

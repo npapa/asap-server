@@ -28,6 +28,9 @@ public class MaterializedWorkflow1 {
 	public double optimalCost;
 	public int count;
 	public String name;
+	public HashMap<String, String> groupInputs;
+	public String function;
+	public String functionTarget;
 	private static Logger logger = Logger.getLogger(MaterializedWorkflow1.class.getName());
 	
 	@Override
@@ -212,6 +215,12 @@ public class MaterializedWorkflow1 {
 		
 		mw.readFromDir("asapLibrary/workflows/latest");
 		System.out.println(mw);
+	}
+
+	public void setPolicy(HashMap<String, String> groupInputs, String function, String functionTarget) {
+		this.groupInputs = groupInputs;
+		this.function = function;
+		this.functionTarget = functionTarget;
 	}
 
 

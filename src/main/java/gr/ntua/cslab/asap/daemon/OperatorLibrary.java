@@ -126,19 +126,28 @@ public class OperatorLibrary {
 		return operators.get(opname);
 	}
 
-	public static String getProfile(String opname, String variable) throws Exception {
+	public static String getProfile(String opname, String variable, String profileType) throws Exception {
 		Operator op = operators.get(opname);
 		op.configureModel();
-		
 
-		File csv  = new File(operatorDirectory+"/"+op.opName+"/data/"+variable+".csv");
-		if(csv.exists()){
-			op.writeCSVfileUniformSampleOfModel(variable, 1.0, "www/test.csv", ",",true);
-			append("www/test.csv",csv.toString(),",", op.inputSpace);
-		}
-		else{
+    	if(profileType.equals("Compare models")){
+    		File csv  = new File(operatorDirectory+"/"+op.opName+"/data/"+variable+".csv");
+    		if(csv.exists()){
+    			op.writeCSVfileUniformSampleOfModel(variable, 1.0, "www/test.csv", ",",true);
+    			append("www/test.csv",csv.toString(),",", op.inputSpace);
+    		}
+    		else{
+    			op.writeCSVfileUniformSampleOfModel(variable, 1.0, "www/test.csv", ",",false);
+    		}
+    	}
+    	else if(profileType.equals("View model")){
 			op.writeCSVfileUniformSampleOfModel(variable, 1.0, "www/test.csv", ",",false);
-		}
+    	}
+    	else{
+    		File csv  = new File(operatorDirectory+"/"+op.opName+"/data/"+variable+".csv");
+			op.writeCSVfileUniformSampleOfModel(variable, 0.0, "www/test.csv", ",",true);
+			append("www/test.csv",csv.toString(),",", op.inputSpace);
+    	}
 		//op.writeCSVfileUniformSampleOfModel(1.0, "www/test.csv", ",");
 		return "/test.csv";
 		/*if(opname.equals("Sort"))

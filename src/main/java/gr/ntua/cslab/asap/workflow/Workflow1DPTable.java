@@ -8,15 +8,18 @@ import java.util.List;
 public class Workflow1DPTable {
 	private HashMap<Dataset,List<WorkflowNode>> dpTable;
 	private HashMap<Dataset,Double> dpCost;
+	private HashMap<Dataset,HashMap<String,Double>> dpMetrics;
 
 	public Workflow1DPTable() {
 		dpTable = new HashMap<Dataset,List<WorkflowNode>>();
 		dpCost = new HashMap<Dataset,Double>();
+		dpMetrics = new HashMap<Dataset, HashMap<String,Double>>();
 	}
 	
-	public void addRecord(Dataset dataset, List<WorkflowNode> plan, Double cost){
+	public void addRecord(Dataset dataset, List<WorkflowNode> plan, Double cost, HashMap<String,Double> metrics){
 		dpTable.put(dataset, plan);
 		dpCost.put(dataset,cost);
+		dpMetrics.put(dataset,metrics);
 	}
 	
 	public Double getCost(Dataset dataset){
@@ -29,5 +32,9 @@ public class Workflow1DPTable {
 	
 	public List<WorkflowNode> getPlan(Dataset dataset){
 		return dpTable.get(dataset);
+	}
+	
+	public HashMap<String,Double> getMetrics(Dataset dataset){
+		return dpMetrics.get(dataset);
 	}
 }

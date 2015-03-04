@@ -49,4 +49,8 @@ public class MaterializedWorkflowLibrary {
 		workflow.writeToDir(workflowDirectory);
 	}
 
+	public static MaterializedWorkflow1 get(String mw) {
+		return materializedWorkflows.get(mw);
+	}
+
 }

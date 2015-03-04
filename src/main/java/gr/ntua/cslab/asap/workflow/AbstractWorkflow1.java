@@ -35,6 +35,10 @@ public class AbstractWorkflow1 {
 	private HashMap<String,WorkflowNode> workflowNodes;
 	public String name;
 	private static Logger logger = Logger.getLogger(AbstractWorkflow1.class.getName());
+	
+	public HashMap<String,String> groupInputs;
+	public String optimizationFunction;
+	public String functionTarget;
 
 	@Override
 	public String toString() {
@@ -59,9 +63,12 @@ public class AbstractWorkflow1 {
 		return targets;
 	}
 
-	public MaterializedWorkflow1 materialize(String metric, String nameExtention) throws Exception {
-		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1(name+"_"+nameExtention);
+	public MaterializedWorkflow1 materialize(String metric, String nameExtention, String policy) throws Exception {
 
+		parsePolicy(policy);
+		
+		MaterializedWorkflow1 materializedWorkflow = new MaterializedWorkflow1(name+"_"+nameExtention);
+		materializedWorkflow.setPolicy(groupInputs, optimizationFunction, functionTarget);
 		Workflow1DPTable dpTable = new Workflow1DPTable();
 		for(WorkflowNode t : targets){
 			List<WorkflowNode> l = t.materialize(metric, materializedWorkflow,dpTable);
@@ -70,24 +77,53 @@ public class AbstractWorkflow1 {
 			//System.out.println(l+"fsdgd");
 			temp.addInputs(l);
 			materializedWorkflow.addTarget(temp);
-			Double minCost=Double.MAX_VALUE;
+			Double bestCost=0.0;
 			List<WorkflowNode> bestPlan=null;
-			for(WorkflowNode r : l){
-				Double tempCost = dpTable.getCost(r.dataset);
-				if(tempCost<minCost){
-					minCost=tempCost;
-					bestPlan=dpTable.getPlan(r.dataset);
+			if(functionTarget.contains("min")){
+				bestCost=Double.MAX_VALUE;
+				for(WorkflowNode r : l){
+					Double tempCost = dpTable.getCost(r.dataset);
+					if(tempCost<bestCost){
+						bestCost=tempCost;
+						bestPlan=dpTable.getPlan(r.dataset);
+					}
+				}
+			}
+			else if(functionTarget.contains("max")){
+				bestCost = -Double.MAX_VALUE;
+				for(WorkflowNode r : l){
+					Double tempCost = dpTable.getCost(r.dataset);
+					if(tempCost>bestCost){
+						bestCost=tempCost;
+						bestPlan=dpTable.getPlan(r.dataset);
+					}
 				}
 			}
 			bestPlan.add(t);
 			materializedWorkflow.setBestPlan(t.toStringNorecursive(), bestPlan);
-			logger.info("Optimal cost: "+minCost);
-			materializedWorkflow.optimalCost=minCost;
+			logger.info("Optimal cost: "+bestCost);
+			materializedWorkflow.optimalCost=bestCost;
 		}
 		
 		return materializedWorkflow;
 	}
 	
+	private void parsePolicy(String policy) {
+		groupInputs = new HashMap<String, String>();
+		String[] p = policy.split("\n");
+		for (int i = 0; i < p.length; i++) {
+			String[] p1 = p[i].split(",");
+			if(p1[0].equals("groupInputs")){
+				groupInputs.put(p1[1], p1[2]);
+			}
+			else if(p1[0].equals("function")){
+				optimizationFunction=p1[1];
+				functionTarget=p1[2];
+			}
+		}
+		//System.out.println(functionTarget);
+	}
+
 	public void writeToDir(String directory) throws Exception {
 
 		for(WorkflowNode t : targets){
@@ -399,7 +435,7 @@ public class AbstractWorkflow1 {
 
 		abstractWorkflow.writeToDir("asapLibrary/abstractWorkflows/DataAnalytics");
 		System.exit(0);
-		MaterializedWorkflow1 mw = abstractWorkflow.materialize("execTime", "t");
+		MaterializedWorkflow1 mw = abstractWorkflow.materialize("execTime", "t","");
 		System.out.println(abstractWorkflow);
 		System.out.println(mw);
 		mw.printNodes();
