@@ -38,8 +38,8 @@
 
 .cbp-hrmenu > ul > li > a {
 	font-weight: 700;
-	padding: 1em 2em;
-	color: #999;
+	padding: 2em 20px;
+	color: #000;
 	display: inline-block;
 }
 
@@ -89,7 +89,7 @@
 
 	.cbp-hrmenu > ul > li > a { 
 		display: block;
-		padding: 1em 3em;
+		padding: 2em 20px;
 	}
 
 	.cbp-hrmenu .cbp-hrsub { 

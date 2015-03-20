@@ -63,4 +63,12 @@ public class Workflows {
     public WorkflowDictionary getDescription(@PathParam("id") String id) throws IOException, NumberFormatException, EvaluationException {
         return MaterializedWorkflowLibrary.getWorkflow(id);
     }
+	
+
+	@GET
+	@Produces("application/XML")
+	@Path("/XML/{id}/")
+    public WorkflowDictionary getDescriptionXML(@PathParam("id") String id) throws IOException, NumberFormatException, EvaluationException {
+        return MaterializedWorkflowLibrary.getWorkflow(id);
+    }
 }

@@ -294,8 +294,14 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 				return 1;
 		}
 		else{
-			if(this.isOperator)
-				return this.operator.opName.compareTo(o.operator.opName);
+			if(this.isOperator){
+				if(this.isAbstract!=o.isAbstract)
+					return -1;
+				else if (this.isAbstract)
+					return this.abstractOperator.opName.compareTo(o.abstractOperator.opName);
+				else
+					return this.operator.opName.compareTo(o.operator.opName);
+			}
 			else
 				return this.dataset.compareTo(o.dataset);
 		}
@@ -332,7 +338,7 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 			for(WorkflowNode n : inputs){
 				if(i!=0)
 					ret+=", ";
-				ret+=n.toString();
+				ret+=n.toStringRecursive();
 				i++;
 			}
 			ret+=" }";
@@ -494,6 +500,69 @@ public class WorkflowNode implements Comparable<WorkflowNode>{
 		}
 	}
 
+	public String getArguments() {
+		if(!isOperator)
+			return "";
+		else{
+			String ret = "";
 
+		    for (int i = 0; i < Integer.parseInt(operator.getParameter("Execution.Arguments.number")); i++) {
+		    	String arg = operator.getParameter("Execution.Argument"+i);
+		    	if(arg.startsWith("In")){
+		    		int index = Integer.parseInt(arg.charAt(2)+"");
+		    		WorkflowNode n = inputs.get(index);
+		    		boolean dataset = false;
+		    		while(!n.isOperator){
+		    			if(n.inputs.isEmpty()){
+		    				arg = n.dataset.datasetName;
+		    				dataset=true;
+		    				break;
+		    			}
+		    			else{
+		    				n=n.inputs.get(0);
+		    			}
+		    		}
+		    		if(!dataset)
+		    			arg = n.operator.getParameter("Execution.Output0.fileName");
+		    	}
+		    	ret+= arg+" ";
+			}
+			return ret;
+		}
+	}
+
+	public HashMap<String, String> getInputFiles() {
+		HashMap<String, String> ret = new HashMap<String, String>();
+		if(!isOperator)
+			return ret;
+		else{
+
+		    for (int i = 0; i < Integer.parseInt(operator.getParameter("Execution.Arguments.number"))-1; i++) {
+		    	String arg = operator.getParameter("Execution.Argument"+i);
+		    	String operatorName = "";
+		    	if(arg.startsWith("In")){
+		    		int index = Integer.parseInt(arg.charAt(2)+"");
+		    		WorkflowNode n = inputs.get(index);
+		    		boolean dataset = false;
+		    		while(!n.isOperator){
+		    			if(n.inputs.isEmpty()){
+		    				arg = n.dataset.datasetName;
+		    				dataset=true;
+		    				break;
+		    			}
+		    			else{
+		    				n=n.inputs.get(0);
+		    			}
+		    		}
+		    		if(!dataset){
+		    			arg = n.operator.getParameter("Execution.Output0.fileName");
+		    			operatorName= n.operator.opName;
+		    		}
+		    	}
+		    	ret.put(arg,operatorName);
+			}
+			return ret;
+		}
+	}
 
 }

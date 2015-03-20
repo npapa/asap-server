@@ -17,6 +17,7 @@ import net.sourceforge.jeval.EvaluationException;
 import net.sourceforge.jeval.Evaluator;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -223,7 +224,7 @@ public class Operator {
 	}
 	
 	public void add(String key, String value) {
-        //Logger.getLogger(Main.class.getName()).info("key: "+key+" value: "+value);
+        //Logger.getLogger(Operator.class.getName()).info("Adding key: "+key+" value: "+value);
 		optree.add(key,value);
 	}
 	
@@ -255,6 +256,13 @@ public class Operator {
 		//this.performanceModel = AbstractWekaModel.readFromFile(directory+"/model");
 	}
 
+
+	public void readPropertiesFromString(String properties) throws IOException {
+		InputStream stream = new ByteArrayInputStream(properties.getBytes());
+		readPropertiesFromStream(stream);
+		stream.close();
+	}
+	
 	public void readPropertiesFromStream(InputStream stream) throws IOException {
 		Properties props = new Properties();
 		props.load(stream);

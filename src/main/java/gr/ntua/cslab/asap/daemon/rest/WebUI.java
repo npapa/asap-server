@@ -466,6 +466,9 @@ public class WebUI {
     	ret+="</div><div  class=\"mainpage\">";
     	
     	ret+=workflowUp+"/workflows/"+id+workflowLow;
+
+    	ret+="<form action=\"/web/\" method=\"get\">"
+			+ "<p align=\"right\"><input  class=\"styled-button\" type=\"submit\" value=\"Execute Workflow\"></form>";
     	
     	ret += footer;
     	return ret;
@@ -524,14 +527,15 @@ public class WebUI {
 			+ "<textarea rows=\"4\" cols=\"80\" name=\"policy\">"+defaultPolicy()+"</textarea></p>"
 			+ "<p><input class=\"styled-button\" type=\"submit\" value=\"Materialize Workflow\"></form></p>";
     	
-    	ret+="<p><form action=\"/web/abstractWorkflows/addNode\" method=\"get\">"
+    	ret+="<p><form action=\"/web/abstractWorkflows/addRemove\" method=\"get\">"
     			+ "Comma separated list: <textarea rows=\"1\" cols=\"80\" name=\"name\"></textarea><br>"
     			+ "<p><input type=\"radio\" name=\"type\" value=\"1\" checked>Abstract Operator<br>"
     			+ "<input type=\"radio\" name=\"type\" value=\"2\">Materialized Operator<br>"
     			+ "<input type=\"radio\" name=\"type\" value=\"3\">Abstract Dataset<br>"
     			+ "<input type=\"radio\" name=\"type\" value=\"4\">Materialized Dataset<br>"
     			+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\"></p>"
-    			+ "<p><input class=\"styled-button\" type=\"submit\" value=\"Add nodes\"></form></p>";
+    			+ "<p><input class=\"styled-button\" name=\"addRemove\" type=\"submit\" value=\"Add nodes\">"
+    			+ "<input class=\"styled-button\" name=\"addRemove\" type=\"submit\" value=\"Remove nodes\"></form></p>";
     	
     	ret+="<p><form action=\"/web/abstractWorkflows/changeGraph\" method=\"get\">"
     		+ "<input type=\"hidden\" name=\"workflowName\" value=\""+workflowName+"\">"
@@ -573,16 +577,26 @@ public class WebUI {
     
     @GET
     @Produces(MediaType.TEXT_HTML)
-    @Path("/abstractWorkflows/addNode/")
-    public String addNodeToWorkflow(@QueryParam("workflowName") String workflowName, @QueryParam("type") String type, @QueryParam("name") String name) throws IOException {
+    @Path("/abstractWorkflows/addRemove/")
+    public String addNodeToWorkflow(@QueryParam("workflowName") String workflowName, @QueryParam("type") String type, @QueryParam("name") String name, 
+    		@QueryParam("addRemove") String addRemove) throws IOException {
     	if(name.isEmpty() || type.isEmpty() || workflowName.isEmpty())
             return abstractWorkflowView(workflowName);
     		
-    	String[] names = name.split(",");
-    	for (int i = 0; i < names.length; i++) {
-    		if(!names[i].isEmpty())
-    			AbstractWorkflowLibrary.addNode(workflowName, type, names[i]);
-		}
+    	if(addRemove.contains("Add nodes")){
+	    	String[] names = name.split(",");
+	    	for (int i = 0; i < names.length; i++) {
+	    		if(!names[i].isEmpty())
+	    			AbstractWorkflowLibrary.addNode(workflowName, type, names[i]);
+			}
+    	}
+    	else if (addRemove.contains("Remove nodes")){
+	    	String[] names = name.split(",");
+	    	for (int i = 0; i < names.length; i++) {
+	    		if(!names[i].isEmpty())
+	    			AbstractWorkflowLibrary.removeNode(workflowName, type, names[i]);
+			}
+    	}
         return abstractWorkflowView(workflowName);
     }
     

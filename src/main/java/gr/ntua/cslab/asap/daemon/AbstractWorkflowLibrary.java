@@ -76,4 +76,9 @@ public class AbstractWorkflowLibrary {
 		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
 		aw.addNode(type, name);
 	}
+
+	public static void removeNode(String workflowName, String type, String name) {
+		AbstractWorkflow1 aw = abstractWorkflows.get(workflowName);
+		aw.removeNode(type, name);
+	}
 }

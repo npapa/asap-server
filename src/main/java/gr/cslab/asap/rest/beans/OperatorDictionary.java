@@ -26,6 +26,30 @@ public class OperatorDictionary {
 		input = new ArrayList<String>();
 	}
 	
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public String getIsOperator() {
+		return isOperator;
+	}
+
+	public void setIsOperator(String isOperator) {
+		this.isOperator = isOperator;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 	public void addInput(String in){
 		input.add(in);
 	}

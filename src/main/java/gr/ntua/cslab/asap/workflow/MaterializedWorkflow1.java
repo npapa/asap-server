@@ -1,5 +1,6 @@
 package gr.ntua.cslab.asap.workflow;
 
+import gr.cslab.asap.rest.beans.OperatorDictionary;
 import gr.cslab.asap.rest.beans.WorkflowDictionary;
 import gr.ntua.cslab.asap.operators.Dataset;
 import gr.ntua.cslab.asap.operators.Operator;
@@ -14,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -32,6 +34,7 @@ public class MaterializedWorkflow1 {
 	public String function;
 	public String functionTarget;
 	private static Logger logger = Logger.getLogger(MaterializedWorkflow1.class.getName());
+	public HashMap<String,WorkflowNode> nodes;
 	
 	@Override
 	public String toString() {
@@ -44,6 +47,7 @@ public class MaterializedWorkflow1 {
 		bestPlans = new HashMap<String, List<WorkflowNode>>();
 		optimalCost=0.0;
 		count=0;
+		nodes = new HashMap<String, WorkflowNode>();
 	}
 
 	public void setBestPlan(String target, List<WorkflowNode> plan){
@@ -79,6 +83,42 @@ public class MaterializedWorkflow1 {
     		target.toWorkflowDictionary(ret, bestPlans);
     	}
 		return ret;
+	}
+	
+	public void readFromWorkflowDictionary(WorkflowDictionary workflow) throws Exception {
+		nodes = new HashMap<String, WorkflowNode>();
+		HashSet<String> nodesActive = new HashSet<String>();
+		for(OperatorDictionary op : workflow.getOperators()){
+			if(op.getStatus().equals("running")){
+				nodesActive.add(op.getName());
+				if(op.getIsOperator().equals("true")){
+					WorkflowNode n = new WorkflowNode(true, false);
+					Operator temp = new Operator(op.getName(),"");
+					temp.readPropertiesFromString(op.getDescription());
+					n.setOperator(temp);
+					nodes.put(temp.opName, n);
+				}
+				else{
+					WorkflowNode n = new WorkflowNode(false, false);
+					Dataset temp = new Dataset(op.getName());
+					temp.readPropertiesFromString(op.getDescription());
+					n.setDataset(temp);
+					nodes.put(temp.datasetName, n);
+				}
+			}
+		}
+		this.targets.add(nodes.get("d4"));
+		for(OperatorDictionary op : workflow.getOperators()){
+			if(nodesActive.contains(op.getName())){
+				WorkflowNode dest = nodes.get(op.getName());
+				for(String s : op.getInput()){
+					if(nodesActive.contains(s)){
+						WorkflowNode src = nodes.get(s);
+						dest.inputs.add(src);
+					}
+				}
+			}
+		}
 	}
 	
 
@@ -118,7 +158,7 @@ public class MaterializedWorkflow1 {
 	}
 
 	public void readFromDir(String directory) throws Exception {
-		HashMap<String,WorkflowNode> nodes = new HashMap<String, WorkflowNode>();
+		nodes = new HashMap<String, WorkflowNode>();
 		File folder = new File(directory+"/operators");
 		File[] files = folder.listFiles();
 

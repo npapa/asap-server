@@ -251,7 +251,7 @@ public class AbstractWorkflow1 {
 
 
 	public void changeEdges(String workflowGraph) throws IOException {
-
+		targets= new ArrayList<WorkflowNode>();
 		for(WorkflowNode n : workflowNodes.values()){
 			n.inputs = new ArrayList<WorkflowNode>();
 		}
@@ -303,7 +303,20 @@ public class AbstractWorkflow1 {
 		workflowNodes.put(name,n);
 		
 	}
-	
+
+	public void removeNode(String type, String name) {
+		WorkflowNode n = workflowNodes.remove(name);
+		for(WorkflowNode n1 : workflowNodes.values()){
+			List<WorkflowNode> l =  new ArrayList<WorkflowNode>( n1.inputs);
+			int index = 0;
+			for(WorkflowNode n2 :l){
+				if(n2.compareTo(n)==0){
+					n1.inputs.remove(index);
+				}
+				index++;
+			}
+		}
+	}
 
 	public WorkflowDictionary toWorkflowDictionary() throws NumberFormatException, EvaluationException {
 		WorkflowDictionary ret = new WorkflowDictionary();
@@ -441,6 +454,7 @@ public class AbstractWorkflow1 {
 		mw.printNodes();
 		
 	}
+
 
 
 

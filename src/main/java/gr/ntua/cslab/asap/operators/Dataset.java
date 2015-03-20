@@ -2,6 +2,7 @@ package gr.ntua.cslab.asap.operators;
 
 import gr.ntua.cslab.asap.workflow.WorkflowNode;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -86,6 +87,12 @@ public class Dataset implements Comparable<Dataset> {
 		stream.close();
 	}
 
+	public void readPropertiesFromString(String properties) throws IOException {
+		InputStream stream = new ByteArrayInputStream(properties.getBytes());
+		readPropertiesFromFile(stream);
+		stream.close();
+	}
+	
 	public void readPropertiesFromFile(InputStream stream) throws IOException{
 		Properties props = new Properties();
 		props.load(stream);
