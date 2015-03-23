@@ -173,6 +173,7 @@ public class Main {
 		
 		AbstractWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/abstractWorkflows");
 		MaterializedWorkflowLibrary.initialize(ServerStaticComponents.properties.getProperty("asap.dir")+"/workflows");
+		RunningWorkflowLibrary.initialize();
 	}
 	
 	

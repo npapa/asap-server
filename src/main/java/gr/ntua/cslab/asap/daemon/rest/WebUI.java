@@ -6,6 +6,7 @@ import gr.ntua.cslab.asap.daemon.DatasetLibrary;
 import gr.ntua.cslab.asap.daemon.Main;
 import gr.ntua.cslab.asap.daemon.MaterializedWorkflowLibrary;
 import gr.ntua.cslab.asap.daemon.OperatorLibrary;
+import gr.ntua.cslab.asap.daemon.RunningWorkflowLibrary;
 import gr.ntua.cslab.asap.operators.Operator;
 import gr.ntua.cslab.asap.workflow.AbstractWorkflow1;
 
@@ -37,6 +38,7 @@ public class WebUI {
     public Logger logger = Logger.getLogger(WebUI.class);
     private static String header=readFile("header.html");
     private static String footer=readFile("footer.html");
+    private static String runningWorkflowUp=readFile("runningWorkflowUp.html").trim();
     private static String workflowUp=readFile("workflowUp.html").trim();
     private static String abstractWorkflowUp=readFile("abstractWorkflowUp.html").trim();
     private static String workflowLow=readFile("workflowLow.html");
@@ -455,24 +457,79 @@ public class WebUI {
     }
 
     
-    
 
+    
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/runningWorkflows/")
+    public String listRunningWorkflows() throws IOException {
+    	String ret = header;
+    	ret += "<ul>";
+
+    	List<String> l = RunningWorkflowLibrary.getWorkflows();
+    	ret += "<ul>";
+    	for(String w : l){
+			ret+= "<li><a href=\"/web/runningWorkflows/"+w+"\">"+w+"</a></li>";
+    		
+    	}
+    	ret+="</ul>\n";
+    	ret += footer;
+        return ret;
+    }
+
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    @Path("/runningWorkflows/{id}/")
+    public String runningWorkflowDescription(@PathParam("id") String id) throws IOException {
+    	String trackingUrl = RunningWorkflowLibrary.getTrackingUrl(id);
+    	String ret = header+
+    			"Tracking URL <a href=\""+trackingUrl+"\">"+trackingUrl+"</a>"+
+    			"State: "+RunningWorkflowLibrary.getState(id);
+    	ret+="</div><div  class=\"mainpage\">";
+    	
+    	ret+=runningWorkflowUp+"/runningWorkflows/"+id+workflowLow;
+    	ret += footer;
+    	return ret;
+    }
+    
+    
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Path("/workflows/{id}/")
     public String workflowDescription(@PathParam("id") String id) throws IOException {
 
-    	String ret = header+"Optimal cost: "+MaterializedWorkflowLibrary.get(id).optimalCost;
+    	String ret = header;
     	ret+="</div><div  class=\"mainpage\">";
     	
     	ret+=workflowUp+"/workflows/"+id+workflowLow;
 
-    	ret+="<form action=\"/web/\" method=\"get\">"
+    	ret+="<form action=\"/web/workflows/execute\" method=\"get\">"
+    		+ "<input type=\"hidden\" name=\"workflowName\" value=\""+id+"\">"
 			+ "<p align=\"right\"><input  class=\"styled-button\" type=\"submit\" value=\"Execute Workflow\"></form>";
     	
     	ret += footer;
     	return ret;
     }
+    
+
+
+    @GET
+    @Path("/workflows/execute/")
+    @Produces(MediaType.TEXT_HTML)
+    public String executeWorkflow(@QueryParam("workflowName") String workflowName) throws Exception{
+    	RunningWorkflowLibrary.executeWorkflow(MaterializedWorkflowLibrary.get(workflowName));
+    	String trackingUrl = RunningWorkflowLibrary.getTrackingUrl(workflowName);
+    	String ret = header+
+    			"Tracking URL <a href=\""+trackingUrl+"\">"+trackingUrl+"</a>"+
+    			"State: "+RunningWorkflowLibrary.getState(workflowName);
+    	ret+="</div><div  class=\"mainpage\">";
+    	
+    	ret+=runningWorkflowUp+"/runningWorkflows/"+workflowName+workflowLow;
+    	
+    	ret += footer;
+    	return ret;
+    }
+    
     
     @GET
     @Produces(MediaType.TEXT_HTML)
@@ -619,6 +676,11 @@ public class WebUI {
     	ret+="</div><div  class=\"mainpage\">";
     	
     	ret+=workflowUp+"/workflows/"+mw+workflowLow;
+    	
+    	ret+="<form action=\"/web/workflows/execute\" method=\"get\">"
+        		+ "<input type=\"hidden\" name=\"workflowName\" value=\""+mw+"\">"
+    			+ "<p align=\"right\"><input  class=\"styled-button\" type=\"submit\" value=\"Execute Workflow\"></form>";
+        	
     	
     	ret += footer;
     	return ret;
